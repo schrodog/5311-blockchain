@@ -33,7 +33,7 @@ for i in range(machine_num):
 
   p = Process(target=start_dev, args=(i,) )
   p.start()
-  
+  # aaa
 
 
 

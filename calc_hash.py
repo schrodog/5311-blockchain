@@ -1,7 +1,7 @@
 # %%
 
 # bitcoin: hash written in hex
-
+import numpy
 import struct
 import binascii
 from hashlib import sha256
@@ -11,20 +11,48 @@ import codecs
 
 # %%
 
+aa = ['ab','df','34']
+aa.append("oh")
+print(aa)
+
+a = {'a':1, 'b':2, 'd':34}
+a['a'] = 0
+print(a)
+
+# %%
+
 def get_block(block_height):
   with urllib.request.urlopen("https://blockchain.info/block-height/"+str(block_height)+"?format=json") as url:
     data = json.loads(url.read().decode())
     print('hash', data['blocks'][0]['hash'])
     return data['blocks'][0]
 
-data = get_block(540156)
+data = get_block(540)
 print(data['hash'])
+
+# %%
+
+a = [str(i)+'a' for i in range(1,6)]
+print(a)
 
 # %%
 
 def reverse_hex(inp):
   return reduce(lambda x, y: x+y, [inp[i: i+2] for i in range(len(inp), -1, -2)])
 
+# %%
+
+# why reverse?
+# big endian
+# little endian
+
+# byte as unit
+# data = 0f2c4a
+# 0x001, 0x002, 0x003
+# 0f     2c     4a    (big endian) <--- generally 
+# 4a     2c     0f    (little endian) <--- 
+
+# %%
 version = reverse_hex(hex(data['ver'])[2:].zfill(8))
 prev = reverse_hex(data['prev_block'])
 merkle = reverse_hex(data['mrkl_root'])
@@ -34,11 +62,11 @@ nonce = reverse_hex(str(hex(data['nonce']))[2:])
 
 together = version + prev + merkle + time + bits + nonce
 
-print(together)
+print('together',together)
 header = binascii.unhexlify(together)
 res = sha256(sha256(header).digest()).hexdigest()
 # res = codecs.encode(sha256(together.encode()).digest(), 'hex_codec')
-print(res)
+print('res',res)
 print(reverse_hex(res))
 
 
@@ -109,6 +137,11 @@ print('end')
 def dec_hex(inp):
   st = struct.pack("<i", inp)
   return hex(int("0x"+str(binascii.b2a_hex(st))[2:-1], 16))
+
+
+# %%
+
+
 
 
 

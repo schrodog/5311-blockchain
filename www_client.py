@@ -12,7 +12,7 @@ print('This host name is: ', host_name)
 print('The host ip is: ', ip)
 
 # set the port number
-port = 3002
+port = 3001
 
 # connection to the host_name on the port, please change the ip address for the host
 client_socket.connect((ip, port))
