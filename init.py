@@ -17,12 +17,27 @@ class netShell(cmd.Cmd):
     self.net = P2P_network()
 
   def do_connect(self, arg):
-    self.net.connect(parse(arg))
+    self.net.connects(parse(arg)[0])
 
-  # need to provide both self, arg as argument
+  def do_broadcast(self, arg):
+    self.net.broadcast(parse(arg)[0])
+
+  # need to provide both (self, arg) as argument
   # to avoid do_welcome() takes 1 positional argument but 2 were given error
-  def do_welcome(self, arg):
-    self.net.welcome()
+  def do_info(self, arg):
+    # print('welcome',self.net.peer_conn)
+    self.net.info()
+
+  # TODO
+  def do_bye(self, arg):
+    for t in self.net.thread_pool:
+      t.join()
+    # self.net.port = None
+    print('close')
+    # return True
+    # print('dfd')
+    raise SystemExit
+    # print('close')
 
 
 if __name__ == '__main__':

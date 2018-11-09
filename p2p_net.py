@@ -4,6 +4,7 @@ import random
 import socket
 import time
 import logging
+from threading import Thread
 
 # %%
 
@@ -14,34 +15,88 @@ logging.basicConfig(level=logging.DEBUG, format='%(message)s')
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
 
+class HandleMsgThread(Thread):
+  def __init__(self, conn):
+    # to avoid not calling thread.__init__() error
+    super(HandleMsgThread, self).__init__()
+    self.conn = conn
+
+  def run(self):
+    while True:
+      data = self.conn.recv(1024).decode()
+      print('receive data:', data)
+
+    
+class ConnectionThread(Thread):
+  def __init__(self, server_socket, conn_pool, peer_addr):
+    super(ConnectionThread, self).__init__()
+    self.server_socket = server_socket
+    self.conn = None
+    self.addr = None
+    self.conn_pool = conn_pool
+    self.peer_addr = peer_addr
+
+  def run(self):
+    # wait for new connection to server port
+    conn, addr = self.server_socket.accept()
+    self.conn = conn
+    self.addr = addr
+    self.conn_pool.append(conn)
+    self.peer_addr.append(addr)
+
+    print('new conn', self.conn, self.addr)
+    # args must be in format (xxx,) to make it iterable
+    t2 = HandleMsgThread(conn)
+    t2.start()
+
+    print("connection from", addr)
+
+
+
 class P2P_network:
   def __init__(self):
-    self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    self.socket_pool = []
+    self.port_pool = []
+    self.thread_pool = []
+    self.peer_ports = []
+    self.conn_pool = []
+    self._addServerSocket()
+    self._addServerSocket()
+    self._addServerSocket()
+    print(self.port_pool)
+
+  def _createServerSocket(self):
     while True:
       try:
-        self.port = random.randint(10000, 50000)
-        self.socket.bind((host_name, self.port))
-        self.socket.listen()
-        break
+        port = random.randint(10000, 50000)
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket.bind((host_name, port))
+        server_socket.listen()
+        t = ConnectionThread(server_socket, self.conn_pool, self.peer_ports)
+        t.start()
+        return (server_socket, port, t)
       except OSError as e:
         logging.debug("OSError {} {}".format(e, self.port))
-    # self.receive_msg()
+  
+  def _addServerSocket(self):
+    soc, port, t = self._createServerSocket()
+    self.socket_pool.append(soc)
+    self.port_pool.append(port)
+    self.thread_pool.append(t)
 
-  def connect(self, port):
+
+  def connects(self, port):
     try:
-      self.socket.connect(localIP, port)
+      self.client_socket.connect((localIP, int(port)))
     except OSError as e:
-      logging.debug("Cannot connect to port "+str(port))
+      logging.debug("Cannot connect to port "+str(port)+ e)
 
-  def receive_msg(self):
-    while True:
-      print("my port", self.port)
-      conn, addr = self.socket.accept()
-      print("connection from", addr)
+  def broadcast(self, msg):
+    self.client_socket.sendall(bytes(msg, 'utf-8'))
 
-  @staticmethod
-  def welcome():
-    print('well')
+  def info(self):
+    print('peers', self.peer_ports, 'server_port', self.port_pool)
 
 
 
