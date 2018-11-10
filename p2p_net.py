@@ -22,9 +22,16 @@ class HandleMsgThread(Thread):
     self.conn = conn
 
   def run(self):
+    i = 0
     while True:
       data = self.conn.recv(1024).decode()
+      if not data:
+        i += 1
+        if i > 3:
+          break
+          return
       print('receive data:', data)
+
 
     
 class ConnectionThread(Thread):
@@ -55,15 +62,16 @@ class ConnectionThread(Thread):
 
 class P2P_network:
   def __init__(self):
-    self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    self.socket_pool = []
+    self.clientSocket_pool = []
+    self.serverSocket_pool = []
     self.port_pool = []
     self.thread_pool = []
     self.peer_ports = []
+    self.peer_connectTo = []
     self.conn_pool = []
-    self._addServerSocket()
-    self._addServerSocket()
-    self._addServerSocket()
+    for _ in range(5):
+      self._addServerSocket()
+      self._addClientSocket()
     print(self.port_pool)
 
   def _createServerSocket(self):
@@ -79,16 +87,23 @@ class P2P_network:
       except OSError as e:
         logging.debug("OSError {} {}".format(e, self.port))
   
+  def _createClientSocket(self):
+    soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    self.clientSocket_pool(soc)
+  
   def _addServerSocket(self):
     soc, port, t = self._createServerSocket()
-    self.socket_pool.append(soc)
+    self.serverSocket_pool.append(soc)
     self.port_pool.append(port)
     self.thread_pool.append(t)
 
+  def _addClientSocket(self):
+    self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
   def connects(self, port):
     try:
       self.client_socket.connect((localIP, int(port)))
+      self.peer_connectTo.append(port)
     except OSError as e:
       logging.debug("Cannot connect to port "+str(port)+ e)
 
