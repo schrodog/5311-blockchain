@@ -63,6 +63,7 @@ class ConnectionThread(Thread):
 class P2P_network:
   def __init__(self):
     self.clientSocket_pool = []
+    self.clientSocket_connecting = []
     self.serverSocket_pool = []
     self.port_pool = []
     self.thread_pool = []
@@ -72,6 +73,7 @@ class P2P_network:
     for _ in range(5):
       self._addServerSocket()
       self._addClientSocket()
+
     print(self.port_pool)
 
   def _createServerSocket(self):
@@ -87,10 +89,6 @@ class P2P_network:
       except OSError as e:
         logging.debug("OSError {} {}".format(e, self.port))
   
-  def _createClientSocket(self):
-    soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    self.clientSocket_pool(soc)
-  
   def _addServerSocket(self):
     soc, port, t = self._createServerSocket()
     self.serverSocket_pool.append(soc)
@@ -98,17 +96,28 @@ class P2P_network:
     self.thread_pool.append(t)
 
   def _addClientSocket(self):
-    self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    self.clientSocket_pool.append(soc)
 
   def connects(self, port):
+    if len(self.clientSocket_pool) > 0:
+      for _ in range(5):
+        self._addClientSocket()
+
+    soc = self.clientSocket_pool.pop(0)
+
     try:
-      self.client_socket.connect((localIP, int(port)))
+      soc.connect((localIP, int(port)))
       self.peer_connectTo.append(port)
+      self.clientSocket_connecting.append(soc)
     except OSError as e:
+      self.clientSocket_pool.append(soc)
       logging.debug("Cannot connect to port "+str(port)+ e)
 
   def broadcast(self, msg):
-    self.client_socket.sendall(bytes(msg, 'utf-8'))
+    for soc in self.clientSocket_connecting:
+      soc.sendall(bytes(msg, 'utf-8'))
+
 
   def info(self):
     print('peers', self.peer_ports, 'server_port', self.port_pool)
