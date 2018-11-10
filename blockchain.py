@@ -19,6 +19,22 @@ class Block:
 class Blockchain:    
   def __init__(self):
     self.blocks = []
+    self.diffculty = 24;
+
+  def get()
+    return self.blocks
+
+  def latest_block(self):
+    return self.blocks[-1]
+  
+  def is_valid_hash_diffculty(hash):
+    for i in range(0, len(a)){
+      if hash[i] != 0:
+        break
+    }
+    return i >= self.diffculty;
+  
+
 
 
   
