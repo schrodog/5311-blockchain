@@ -39,3 +39,14 @@ def aaa(a):
   bbb(3)
 
 aaa(4)
+
+# %%
+a = 3
+if not (a>5 and
+  a>7):
+  print('yes')
+else:
+  print('no')
+
+
+# %%
