@@ -1,7 +1,7 @@
 import argparse
 import cmd, sys
 from p2p_net import P2P_network
-
+from multiprocessing import Process
 
 def parse(arg):
   return tuple(map(str, arg.split()))
@@ -14,6 +14,10 @@ class netShell(cmd.Cmd):
 
   def __init__(self):
     cmd.Cmd.__init__(self)
+    self.main = Process(target=self.__start, args=())
+    self.main.start()
+
+  def __start(self):
     self.net = P2P_network()
 
   def do_connect(self, arg):
@@ -30,14 +34,15 @@ class netShell(cmd.Cmd):
 
   # TODO
   def do_bye(self, arg):
-    for t in self.net.thread_pool:
-      t.join()
-    # self.net.port = None
+    # print(self.net.thread_pool)
+    # for t in self.net.thread_pool:
+    #   print(t)
+    #   t.stop()
+    #   t.join()
+    self.main.join()
+
     print('close')
-    # return True
-    # print('dfd')
     raise SystemExit
-    # print('close')
 
 
 if __name__ == '__main__':

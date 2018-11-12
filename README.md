@@ -6,9 +6,11 @@ how to convey message? how to discover other clients?
 **Sequence** number controlled flooding
 
 ## get peerID
-Sender
--- REQUEST, PEERID, identifier  -->
+each peer has unique peerID
 
+Sender
+-- REQUEST, PEERID  -->
 Receiver
-<-- RECEIVE, PEERID, identifier
+<-- RECEIVE, PEERID
+
 

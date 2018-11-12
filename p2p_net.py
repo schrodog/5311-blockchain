@@ -33,8 +33,8 @@ class HandleMsgThread(Thread):
       
       if not raw_data:
         i += 1
+        print('end')
         if i > 3:
-          break
           return
       
       data = json.loads(raw_data.decode())
@@ -71,6 +71,7 @@ class ConnectionThread(Thread):
     self.peerID = peerID
     self.conn_pair = conn_pair
     self.seq_pair = seq_pair
+    self.thread_pool = []
 
   def run(self):
     # wait for new connection to server port
@@ -80,9 +81,17 @@ class ConnectionThread(Thread):
 
     # args must be in format (xxx,) to make it iterable
     t2 = HandleMsgThread(conn, self.peerID, self.conn_pair, self.seq_pair)
+    t2.setDaemon(True)
     t2.start()
+    self.thread_pool.append(t2)
 
     print("connection from", addr)
+
+  def stop(self):
+    for t in self.thread_pool:
+      print('1')
+      t.join()
+    return
 
 
 
@@ -112,6 +121,7 @@ class P2P_network:
         server_socket.bind((host_name, port))
         server_socket.listen()
         t = ConnectionThread(server_socket, self.peer_ports, self.peerID, self.conn_peerID_pair, self.seq_peerID_pair)
+        t.setDaemon(True)
         t.start()
         return (server_socket, port, t)
       except OSError as e:
@@ -143,6 +153,7 @@ class P2P_network:
       return
 
     t = HandleMsgThread(soc, self.peerID, self.conn_peerID_pair, self.seq_peerID_pair)
+    t.setDaemon(True)
     t.start()
 
     msg = json.dumps({'type': 'REQUEST_PEERID', 'peerID': self.peerID})

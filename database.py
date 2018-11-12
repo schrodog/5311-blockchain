@@ -17,12 +17,13 @@ post = {
 posts = db.posts
 post_id = posts.insert_one(post).inserted_id
 
-post_id
+print(post_id)
 
 
 # %%
 
-db.collection_names(include_system_collections=False)
+db.collection_name.database
+db.client
 
 # %%
 

@@ -26,27 +26,28 @@ new_obj.new_foo("NewFoo")
 
 # %%
 from threading import Thread
+import time
 
 class T1(Thread):
   def __init__(self):
-    
+    super(T1,self).__init__()
 
-def aaa(a):
-  print(a)
-  def bbb(b):
-    print(a+b)
+  def run(self):
+    i = 0
+    while True:
+      i += 1
+      print('a')
+      if i>4:
+        return
+    print('end')
 
-  bbb(3)
+for _ in range(1):
+  t = T1()
+  t.start()
+  # t.join()
 
-aaa(4)
 
-# %%
-a = 3
-if not (a>5 and
-  a>7):
-  print('yes')
-else:
-  print('no')
+
 
 
 # %%
