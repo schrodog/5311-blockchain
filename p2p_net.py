@@ -7,6 +7,7 @@ import time
 import logging
 import uuid
 from threading import Thread
+from database import Database
 
 # %%
 
@@ -30,7 +31,7 @@ class HandleMsgThread(Thread):
     i = 0
     while True:
       raw_data = self.conn.recv(1024)
-      
+      # connection interrupted
       if not raw_data:
         i += 1
         print('end')
@@ -96,8 +97,8 @@ class ConnectionThread(Thread):
 
 
 class P2P_network:
-  def __init__(self):
-    self.peerID = uuid.uuid4().hex[:10]
+  def __init__(self, _id=-1):
+    self.peerID = self._getPeerID(_id)
     self.clientSocket_pool = []
     self.clientSocket_connecting = []
     self.serverSocket_pool = []
@@ -107,11 +108,17 @@ class P2P_network:
     self.peer_connectTo = []
     self.conn_peerID_pair = {}
     self.seq_peerID_pair = {self.peerID: 0}
+    self.db = Database(self.peerID)
     for _ in range(5):
       self._addServerSocket()
       self._addClientSocket()
 
     print(self.serverPort_pool)
+  
+  def _getPeerID(self, _id):
+    if _id != -1:
+      return str(_id)
+    return uuid.uuid4().hex[:10]
 
   def _createServerSocket(self):
     while True:

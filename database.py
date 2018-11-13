@@ -1,32 +1,43 @@
-# %%
-
+import subprocess
 from pymongo import MongoClient
-import datetime
 
-client = MongoClient('localhost', 27017)
-db = client.test_database
+class Database:
+  def __init__(self, peerID):
+    self.port = 27017
+    self.peerID = peerID
+    self._start()
+    self._initDB(peerID)
 
-post = {
-  "author": "Mike",
-  "text": "my first blog",
-  "tags": ["mongodb", "python", "pymon"],
-  "date": datetime.datetime.utcnow()
-}
+  def _start(self):
+    print('start')
+    self.main = subprocess.Popen(["mongod", "--dbpath", "./db/", "--port", str(self.port)], stdout=subprocess.PIPE)
+    # print(a.stdout.decode())
 
-# %%
-posts = db.posts
-post_id = posts.insert_one(post).inserted_id
+  def _initDB(self, peerID):
+    client = MongoClient('localhost', self.port)
+    self.db = client.blockchain_db
+    self.blockchain = self.db[peerID]
 
-print(post_id)
+  def insert(self, data):
+    self.blockchain.insert_many(data)
+  
+  def overwrite(self, data):
+    # request = [DeleteMany(filter={}), InsertMany(data)]
+    self.blockchain.delete_many(filter={})
+    self.blockchain.insert_many(data)
+  
+  def load(self):
+    return [i for i in self.blockchain.find()]
 
+  def close(self):
+    self.main.terminate()
 
-# %%
+a = Database('abc')
+a.overwrite([{'a': 1, 'b': 2}])
+print(a.load())
+# a.close()
 
-db.collection_name.database
-db.client
-
-# %%
-
-
-
+b = Database('def')
+b.insert([{'c': 1, 'd': 2}])
+print(b.load())
 

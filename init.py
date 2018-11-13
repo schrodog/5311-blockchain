@@ -14,8 +14,10 @@ class netShell(cmd.Cmd):
 
   def __init__(self):
     cmd.Cmd.__init__(self)
-    self.main = Process(target=self.__start, args=())
-    self.main.start()
+    self.__start()
+    # self.net = None
+    # self.main = Process(target=self.__start, args=(self.net,))
+    # self.main.start()
 
   def __start(self):
     self.net = P2P_network()
@@ -29,18 +31,9 @@ class netShell(cmd.Cmd):
   # need to provide both (self, arg) as argument
   # to avoid do_welcome() takes 1 positional argument but 2 were given error
   def do_info(self, arg):
-    # print('welcome',self.net.peer_conn)
     self.net.info()
 
-  # TODO
   def do_bye(self, arg):
-    # print(self.net.thread_pool)
-    # for t in self.net.thread_pool:
-    #   print(t)
-    #   t.stop()
-    #   t.join()
-    self.main.join()
-
     print('close')
     raise SystemExit
 
