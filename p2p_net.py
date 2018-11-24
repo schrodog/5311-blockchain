@@ -28,18 +28,45 @@ class HandleMsgThread(Thread):
     self.seq_pair = seq_pair
     self.blockchain = blockchain
 
-  def receive_latest_block(self, data):
-    my_latest_block = self.blockchain.latest_block
+  # after checking confirm latest block valid, redirect latest block
+  def broadcast_latest_block(self, source):
+    # self.seq_peerID_pair[self.peerID] += 1
+    msg = json.dumps({'type': 'RECEIVE_LATEST_BLOCK', 'source': source, 
+      'block': self.blockchain.latest_block, 'seq_no': self.seq_pair[source],
+      'sender': self.peerID ]})
+    
+    # controlled flooding
+    print('broadcast latest block to peers')
+    for _id, soc in self.conn_pair.items():
+      soc.send(bytes(msg, 'utf-8'))
 
-    if my_latest_block.hash == data.prev_hash:
-      self.blockchain.add_block(data)
-    elif data.index > my_latest_block.index:
-      msg = json.dumps({'type': 'REQUEST_BLOCKCHAIN', 'source': self.peerID})
-      self.conn_pair[data['source']].send(bytes(msg, 'utf-8'))
+
+  def receive_latest_block(self, data):
+    block = data['block']
+    seq_num = int(data['seq_no'])
+    if not (data['source'] in self.seq_pair):
+      self.seq_pair[data['source']] = 0
+
+    # if not receive latest block from this peer before
+    if seq_num > self.seq_pair[data['source']]:
+      self.seq_pair[data['source']] = seq_num
+
+      my_latest_block = self.blockchain.latest_block
+      if my_latest_block.hash == data.prev_hash:
+        result = self.blockchain.add_block(block)
+        if result:
+          self.broadcast_latest_block(data['source'])
+      elif block.index > my_latest_block.index:
+        msg = json.dumps({'type': 'REQUEST_BLOCKCHAIN', 'sender': self.peerID, 
+          'source': data['source']})
+        self.conn_pair[data['sender']].send(bytes(msg, 'utf-8'))
+
 
   def receive_blockchain(self, data):
-    self.blockchain.replaceChain(data)
-    
+    block = data['blockchain']
+    result = self.blockchain.replaceChain(block)
+    if result:
+      self.broadcast_latest_block(data['source'])
 
   def run(self):
     i = 0
@@ -68,33 +95,36 @@ class HandleMsgThread(Thread):
         if not (data['source'] in self.conn_pair):
           pass
         else:
-          msg = json.dumps({'type': 'RECEIVE_LATEST_BLOCK', 'source': self.peerID, 'block': self.blockchain.latest_block })
+          self.seq_peerID_pair[self.peerID] += 1
+          msg = json.dumps({'type': 'RECEIVE_LATEST_BLOCK', 'source': self.peerID, 
+            'block': self.blockchain.latest_block, 'seq_no': self.seq_peerID_pair[self.peerID]})
           self.conn_pair[data['source']].send(bytes(msg, 'utf-8'))
 
       elif data['type'] == 'RECEIVE_LATEST_BLOCK':
-        self.receive_latest_block(data['block'])
+        self.receive_latest_block(data)
 
       elif data['type'] == 'REQUEST_BLOCKCHAIN':
-        if not data['source'] in self.conn_pair):
+        if not data['sender'] in self.conn_pair):
           pass
         else:
-          msg = json.dumps({'type': 'RECEIVE_BLOCKCHAIN', 'source': self.peerID, 'blockchain': self.blockchain.block_chain })
-          self.conn_pair[data['source']].send(bytes(msg, 'utf-8'))
+          msg = json.dumps({'type': 'RECEIVE_BLOCKCHAIN', 'source': data['source'],
+            'sender': self.peerID, 'blockchain': self.blockchain.block_chain })
+          self.conn_pair[data['sender']].send(bytes(msg, 'utf-8'))
 
       elif data['type'] == 'RECEIVE_BLOCKCHAIN':
-        self.receive_blockchain(data['blockchain'])
+        self.receive_blockchain(data)
           
-      else:
-        num = int(data['seq_no'])
-        if not (data['source'] in self.seq_pair):
-          self.seq_pair[data['source']] = 0
+      # else:
+      #   num = int(data['seq_no'])
+      #   if not (data['source'] in self.seq_pair):
+      #     self.seq_pair[data['source']] = 0
 
-        # controlled flooding
-        if num > self.seq_pair[data['source']]:
-          print('broadcast to peers')
-          self.seq_pair[data['source']] = num
-          for _id, soc in self.conn_pair.items():
-            soc.sendall(raw_data)
+      #   # controlled flooding
+      #   if num > self.seq_pair[data['source']]:
+      #     print('broadcast to peers')
+      #     self.seq_pair[data['source']] = num
+      #     for _id, soc in self.conn_pair.items():
+      #       soc.sendall(raw_data)
 
 
     
@@ -107,7 +137,7 @@ class ConnectionThread(Thread):
     self.conn_pair = conn_pair
     self.seq_pair = seq_pair
     self.thread_pool = []
-    self.blockchain
+    self.blockchain = blockchain
 
   def run(self):
     # wait for new connection to server port
@@ -162,7 +192,7 @@ class P2P_network:
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.bind((host_name, port))
         server_socket.listen()
-        t = ConnectionThread(server_socket, self.peer_ports, self.peerID, self.conn_peerID_pair, self.seq_peerID_pair)
+        t = ConnectionThread(server_socket, self.peer_ports, self.peerID, self.conn_peerID_pair, self.seq_peerID_pair, self.blockchain)
         t.setDaemon(True)
         t.start()
         return (server_socket, port, t)
@@ -208,6 +238,9 @@ class P2P_network:
 
     for key,soc in self.conn_peerID_pair.items():
       soc.sendall(bytes(msg, 'utf-8'))
+
+  def mine(self):
+    self.blockchain.mine()
 
   def info(self):
     print({'peerID': self.peerID, 'peer_ports': self.peer_ports, 

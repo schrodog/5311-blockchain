@@ -53,7 +53,11 @@ class Block:
 class Blockchain:    
   def __init__(self, peerID):
     self.db = Database(peerID)
-    self.blocks = [Block.genesis(self)]
+    bks = db.load()
+    if bks:
+      self.blocks = bks
+    else:
+      self.blocks = [Block.genesis(self)]
     self.difficulty = 4
 
   @property
@@ -95,8 +99,10 @@ class Blockchain:
   def add_block(self, new_block):
     if self.check_next_block(new_block, self.latest_block):
       self.blocks.append(new_block)
+      db.insert([new_block])
+      return True
     else:
-      raise Exception('invalid block') 
+      return False
   
   def check_next_block(self, nextBlock, previousBlock):
     nextBlockHash = self.calculate_hash(nextBlock.prev_hash, nextBlock.timestamp, nextBlock.nonce)
@@ -120,9 +126,9 @@ class Blockchain:
     return all(self.check_next_block(chain[i+1], chain[i]) for i in range(len(chain)-1))
 
   def replaceChain(self, newChain):
-    
     if self.check_chain(newChain) and (len(newChain) > len(self.blocks)):
       self.blocks = newChain
+      db.overwrite(newChain)
       return True
     else:
       return False
