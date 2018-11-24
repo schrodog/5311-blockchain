@@ -38,6 +38,7 @@ print(a.load())
 # a.close()
 
 b = Database('def')
+b.overwrite([{'f':3}])
 b.insert([{'c': 1, 'd': 2}])
 print(b.load())
 
