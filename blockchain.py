@@ -12,42 +12,53 @@ class Transaction:
     self.current_hash = t['current_hash']
     self.data = t['data']
 
-class Block:
-  def __init__(self, b):
-    self.timestamp = b['timestamp']
-    self.prev_hash = b['prev_hash']
-    self.current_hash = b['current_hash']
-    self.nonce = b['nonce']
-    self.transaction = b['transaction']
-    self.merkle_root = b['merkle_root']
-    self.index = b['index']
+# class Block:
+#   def __init__(self, b):
+#     self.timestamp = b['timestamp']
+#     self.prev_hash = b['prev_hash']
+#     self.current_hash = b['current_hash']
+#     self.nonce = b['nonce']
+#     self.transaction = b['transaction']
+#     self.merkle_root = b['merkle_root']
+#     self.index = b['index']
 
-  def __eq__(self, other):
-    return self.block == other.block  
+#   def __eq__(self, other):
+#     return self.block == other.block  
   
-  @staticmethod
-  def genesis(self):
-    return Block({
-      'timestamp': 15080396630448296,
-      'prev_hash': '0',
-      'current_hash': '00000000315c77a1f9c98fb6247d03dd18ac52632d7dc6a9920261d8109b37cf',
-      'nonce': 0,
-      'transaction': [],
-      'merkle_root': '0',
-      'index': 0
-    })
+#   @staticmethod
+#   def genesis(self):
+#     return Block({
+#       'timestamp': 15080396630448296,
+#       'prev_hash': '0',
+#       'current_hash': '00000000315c77a1f9c98fb6247d03dd18ac52632d7dc6a9920261d8109b37cf',
+#       'nonce': 0,
+#       'transaction': [],
+#       'merkle_root': '0',
+#       'index': 0
+#     })
   
-  @property
-  def block(self):
-    return {
-      'timestamp': self.timestamp,
-      'prev_hash': self.prev_hash,
-      'current_hash': self.current_hash,
-      'nonce': self.nonce,
-      'transaction': self.transaction,
-      'merkle_root': self.merkle_root,
-      'index': self.index
-    }
+#   @property
+#   def block(self):
+#     return {
+#       'timestamp': self.timestamp,
+#       'prev_hash': self.prev_hash,
+#       'current_hash': self.current_hash,
+#       'nonce': self.nonce,
+#       'transaction': self.transaction,
+#       'merkle_root': self.merkle_root,
+#       'index': self.index
+#     }
+
+def genesis():
+  return {
+    'timestamp': 15080396630448296,
+    'prev_hash': '0',
+    'current_hash': '00000000315c77a1f9c98fb6247d03dd18ac52632d7dc6a9920261d8109b37cf',
+    'nonce': 0,
+    'transaction': [],
+    'merkle_root': '0',
+    'index': 0
+  }
 
 
 class Blockchain:    
@@ -57,7 +68,7 @@ class Blockchain:
     if bks:
       self.blocks = bks
     else:
-      self.blocks = [Block.genesis(self)]
+      self.blocks = [genesis()]
     self.difficulty = 4
 
   @property
@@ -82,8 +93,8 @@ class Blockchain:
     self.add_block(new_block)
   
   def create_next_block(self):
-    next_index = self.latest_block.index + 1
-    previous_hash = self.latest_block.current_hash
+    next_index = self.latest_block['index'] + 1
+    previous_hash = self.latest_block['current_hash']
     timestamp = int(str(time.time()).replace('.',''))
     nonce = 0
     next_hash = self.calculate_hash(previous_hash, timestamp, nonce)
@@ -96,24 +107,24 @@ class Blockchain:
     merkle_root = '0'
 
     # What is correct value for merkle root and transaction?
-    next_block = Block({'index': next_index, 'prev_hash': previous_hash, 'timestamp': timestamp, 'current_hash': next_hash, 'nonce': nonce, 'merkle_root': merkle_root, 'transaction': []})
+    next_block = {'index': next_index, 'prev_hash': previous_hash, 'timestamp': timestamp, 'current_hash': next_hash, 'nonce': nonce, 'merkle_root': merkle_root, 'transaction': []}
     return next_block
   
   def add_block(self, new_block):
     if self.check_next_block(new_block, self.latest_block):
       self.blocks.append(new_block)
-      self.db.insert([new_block.block])
+      self.db.insert([new_block])
       return True
     else:
       return False
   
   def check_next_block(self, nextBlock, previousBlock):
-    nextBlockHash = self.calculate_hash(nextBlock.prev_hash, nextBlock.timestamp, nextBlock.nonce)
-    if (previousBlock.index + 1) != nextBlock.index:
+    nextBlockHash = self.calculate_hash(nextBlock['prev_hash'], nextBlock['timestamp'], nextBlock['nonce'])
+    if (previousBlock['index'] + 1) != nextBlock['index']:
       return False
-    elif previousBlock.current_hash != nextBlock.prev_hash:
+    elif previousBlock['current_hash'] != nextBlock['prev_hash']:
       return False
-    elif nextBlockHash != nextBlock.current_hash:
+    elif nextBlockHash != nextBlock['current_hash']:
       return False
     elif not self.check_difficulty(nextBlockHash):
       return False
@@ -123,7 +134,7 @@ class Blockchain:
   def check_chain(self, chain):
     if not chain:
       return False
-    elif chain[0] != Block.genesis(self):
+    elif chain[0] != genesis():
       return False
 
     return all(self.check_next_block(chain[i+1], chain[i]) for i in range(len(chain)-1))

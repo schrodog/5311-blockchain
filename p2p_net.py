@@ -32,7 +32,7 @@ class HandleMsgThread(Thread):
   def broadcast_latest_block(self, source):
     # self.seq_peerID_pair[self.peerID] += 1
     msg = json.dumps({'type': 'RECEIVE_LATEST_BLOCK', 'source': source, 
-      'block': self.blockchain.latest_block.block, 'seq_no': self.seq_pair[source],
+      'block': self.blockchain.latest_block, 'seq_no': self.seq_pair[source],
       'sender': self.peerID })
     
     # controlled flooding
@@ -51,7 +51,7 @@ class HandleMsgThread(Thread):
     if seq_num > self.seq_pair[data['source']]:
       self.seq_pair[data['source']] = seq_num
 
-      my_latest_block = self.blockchain.latest_block.block
+      my_latest_block = self.blockchain.latest_block
       if my_latest_block['current_hash'] == data['block']['prev_hash']:
         result = self.blockchain.add_block(block)
         if result:
@@ -100,7 +100,7 @@ class HandleMsgThread(Thread):
         else:
           self.seq_pair[self.peerID] += 1
           msg = json.dumps({'type': 'RECEIVE_LATEST_BLOCK', 'source': self.peerID, 
-            'block': self.blockchain.latest_block.block, 'seq_no': self.seq_pair[self.peerID]})
+            'block': self.blockchain.latest_block, 'seq_no': self.seq_pair[self.peerID]})
           self.conn_pair[data['source']].send(bytes(msg, 'utf-8'))
 
       elif data['type'] == 'RECEIVE_LATEST_BLOCK':
@@ -244,6 +244,14 @@ class P2P_network:
 
   def mine(self):
     self.blockchain.mine()
+    self.seq_peerID_pair[self.peerID] += 1
+    msg = json.dumps({'type': 'RECEIVE_LATEST_BLOCK', 'source': self.peerID, 
+      'block': self.blockchain.latest_block,
+      'seq_no': self.seq_peerID_pair[self.peerID], 'sender': self.peerID })
+    
+    for _id, soc in self.conn_peerID_pair.items():
+      soc.send(bytes(msg, 'utf-8'))
+
 
   def info(self):
     print({'peerID': self.peerID, 'peer_ports': self.peer_ports, 
