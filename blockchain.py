@@ -104,7 +104,10 @@ class Blockchain:
     
     return True
 
-  def replaceChain(self, newChain)
-
+  def replaceChain(self, newChain):
+    if (self.check_chain(newChain) and len(newChain) > len(self.blockchain))) :
+      this.blockchain = newChain
+    else:
+      return False
   
 
