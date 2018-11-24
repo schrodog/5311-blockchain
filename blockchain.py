@@ -102,7 +102,7 @@ class Blockchain:
   def add_block(self, new_block):
     if self.check_next_block(new_block, self.latest_block):
       self.blocks.append(new_block)
-      self.db.insert([new_block])
+      self.db.insert([new_block.block])
       return True
     else:
       return False
