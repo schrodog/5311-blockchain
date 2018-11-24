@@ -65,6 +65,7 @@ class Blockchain:
   def __init__(self, peerID):
     self.db = Database(peerID)
     bks = self.db.load()
+    print(bks)
     if bks:
       self.blocks = bks
     else:
@@ -73,7 +74,7 @@ class Blockchain:
 
   @property
   def block_chain(self):
-    return [i.block for i in self.blocks]
+    return [i for i in self.blocks]
 
   @property
   def latest_block(self):

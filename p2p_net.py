@@ -8,8 +8,16 @@ import logging
 import uuid
 from threading import Thread
 from blockchain import Blockchain
+from bson import ObjectId
 
 # %%
+
+class JSONEncoder(json.JSONEncoder):
+  def default(self, o):
+    if isinstance(o, ObjectId):
+      return str(o)
+    return json.JSONEncoder.default(self, o)
+
 
 host_name = socket.gethostname()
 localIP = socket.gethostbyname(host_name)
@@ -245,10 +253,9 @@ class P2P_network:
   def mine(self):
     self.blockchain.mine()
     self.seq_peerID_pair[self.peerID] += 1
-    msg = json.dumps({'type': 'RECEIVE_LATEST_BLOCK', 'source': self.peerID, 
+    msg = JSONEncoder().encode({'type': 'RECEIVE_LATEST_BLOCK', 'source': self.peerID, 
       'block': self.blockchain.latest_block,
       'seq_no': self.seq_peerID_pair[self.peerID], 'sender': self.peerID })
-    
     for _id, soc in self.conn_peerID_pair.items():
       soc.send(bytes(msg, 'utf-8'))
 
