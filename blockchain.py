@@ -1,3 +1,4 @@
+# %%
 from hashlib import sha256
 import time
 
@@ -20,25 +21,40 @@ class Block:
     self.merkle_root = b['merkle_root']
     self.index = b['index']
   
+  @staticmethod
   def genesis(self):
-    self.timestamp = time.time()
-    self.prev_hash = 0
-    self.current_hash = '000dc75a315c77a1f9c98fb6247d03dd18ac52632d7dc6a9920261d8109b37cf'
-    self.nonce = 0
-    self.transaction = []
-    self.merkle_root = 0,
-    self.index = 0
+    return Block({
+      'timestamp': 1508270000000,
+      'prev_hash': 0,
+      'current_hash': '000dc75a315c77a1f9c98fb6247d03dd18ac52632d7dc6a9920261d8109b37cf',
+      'nonce': 0,
+      'transaction': [],
+      'merkle_root': 0,
+      'index': 0
+    })
+  
+  @property
+  def block(self):
+    return {
+      'timestamp': self.timestamp,
+      'prev_hash': self.prev_hash,
+      'current_hash': self.current_hash,
+      'nonce': self.nonce,
+      'transaction': self.transaction,
+      'merkle_root': self.merkle_root,
+      'index': self.index
+    }
 
 class Blockchain:    
   def __init__(self):
     #genesis = Block({'timestamp': time.time(), 'prev_hash': 0x0, 
     # 'current_hash': 0x000dc75a315c77a1f9c98fb6247d03dd18ac52632d7dc6a9920261d8109b37cf, 
     # 'nonce': 0, 'transaction':[], 'merkle_root': [], 'index': 0})
-    self.blocks = [Block.genesis()]
+    self.blocks = [Block.genesis(self)]
     self.diffculty = 3
 
   @property
-  def blocks(self):
+  def block(self):
     return self.blocks
 
   def latest_block(self):
@@ -94,20 +110,28 @@ class Blockchain:
   def check_chain(self, chain):
     if chain[0] != Block.genesis():
       return False
-    
-    tempChain = [chain[0]]
-    for i in range(1, len(chain)):
-      if (self.isValidNextBlock(chain[i], tempChain[i - 1])) :
-        tempChain.append(chain[i])
-      else :
-        return False
-    
-    return True
+
+    return all(self.check_next_block(chain[i], chain[i+1]) for i in range(len(chain)-1))
 
   def replaceChain(self, newChain):
-    if (self.check_chain(newChain) and len(newChain) > len(self.blockchain))) :
-      this.blockchain = newChain
+    if self.check_chain(newChain) and (len(newChain) > len(self.blocks)):
+      self.blocks = newChain
     else:
       return False
   
+# %%
+
+bc = Blockchain()
+bc.block[0].block
+
+
+
+
+
+
+
+
+
+
+
 
