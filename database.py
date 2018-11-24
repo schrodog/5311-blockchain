@@ -9,7 +9,7 @@ class Database:
     self._initDB(peerID)
 
   def _start(self):
-    print('start')
+    print('start database')
     self.main = subprocess.Popen(["mongod", "--dbpath", "./db/", "--port", str(self.port)], stdout=subprocess.PIPE)
     # print(a.stdout.decode())
 
@@ -32,13 +32,13 @@ class Database:
   def close(self):
     self.main.terminate()
 
-a = Database('abc')
-a.overwrite([{'a': 1, 'b': 2}])
-print(a.load())
-# a.close()
+# a = Database('abc')
+# a.overwrite([{'a': 1, 'b': 2}])
+# print(a.load())
+# # a.close()
 
-b = Database('def')
-b.overwrite([{'f':3}])
-b.insert([{'c': 1, 'd': 2}])
-print(b.load())
+# b = Database('def')
+# b.overwrite([{'f':3}])
+# b.insert([{'c': 1, 'd': 2}])
+# print(b.load())
 

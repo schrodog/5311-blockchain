@@ -7,7 +7,7 @@ import time
 import logging
 import uuid
 from threading import Thread
-from database import Database
+from blockchain import Blockchain
 
 # %%
 
@@ -19,35 +19,27 @@ console = logging.StreamHandler()
 console.setLevel(logging.INFO)
 
 class HandleMsgThread(Thread):
-  def __init__(self, conn, peerID, conn_pair, seq_pair):
+  def __init__(self, conn, peerID, conn_pair, seq_pair, blockchain):
     # to avoid not calling thread.__init__() error
     super(HandleMsgThread, self).__init__()
     self.conn = conn
     self.peerID = peerID
     self.conn_pair = conn_pair
     self.seq_pair = seq_pair
+    self.blockchain = blockchain
 
   def receive_latest_block(self, data):
-    latest_block = self.blockchain[-1]
-    if latest_block.hash == received_latest_block.prev_hash)[-1]:
-      self.blockchain.add_block(received_latest_block.prev_hash)
-    elif receive_latest_block.index > latest_block.index:
-      msg = json.dumps({'type': 'REQUEST_LATEST_BLOCK'})
-      
-      # broadcast
-      num = int(data['seq_no'])
-      if not (data['source'] in self.seq_pair):
-        self.seq_pair[data['source']] = 0
+    my_latest_block = self.blockchain.latest_block
 
-      # controlled flooding
-      if num > self.seq_pair[data['source']]:
-        print('broadcast to peers')
-        self.seq_pair[data['source']] = num
-        for _id, soc in self.conn_pair.items():
-          soc.sendall(msg)
-    else:
-      pass
+    if my_latest_block.hash == data.prev_hash:
+      self.blockchain.add_block(data)
+    elif data.index > my_latest_block.index:
+      msg = json.dumps({'type': 'REQUEST_BLOCKCHAIN', 'source': self.peerID})
+      self.conn_pair[data['source']].send(bytes(msg, 'utf-8'))
 
+  def receive_blockchain(self, data):
+    self.blockchain.replaceChain(data)
+    
 
   def run(self):
     i = 0
@@ -74,13 +66,23 @@ class HandleMsgThread(Thread):
 
       elif data['type'] == 'REQUEST_LATEST_BLOCK':
         if not (data['source'] in self.conn_pair):
-          return False
+          pass
         else:
-          msg = json.dumps({'type': 'REQUEST_LATEST_BLOCK', 'peerId': self.peerID, 'source':sourceId})
-          self.conn.send(bytes(msg, 'utf-8'))
+          msg = json.dumps({'type': 'RECEIVE_LATEST_BLOCK', 'source': self.peerID, 'block': self.blockchain.latest_block })
+          self.conn_pair[data['source']].send(bytes(msg, 'utf-8'))
+
       elif data['type'] == 'RECEIVE_LATEST_BLOCK':
         self.receive_latest_block(data['block'])
 
+      elif data['type'] == 'REQUEST_BLOCKCHAIN':
+        if not data['source'] in self.conn_pair):
+          pass
+        else:
+          msg = json.dumps({'type': 'RECEIVE_BLOCKCHAIN', 'source': self.peerID, 'blockchain': self.blockchain.block_chain })
+          self.conn_pair[data['source']].send(bytes(msg, 'utf-8'))
+
+      elif data['type'] == 'RECEIVE_BLOCKCHAIN':
+        self.receive_blockchain(data['blockchain'])
           
       else:
         num = int(data['seq_no'])
@@ -97,7 +99,7 @@ class HandleMsgThread(Thread):
 
     
 class ConnectionThread(Thread):
-  def __init__(self, server_socket, peer_addr, peerID, conn_pair, seq_pair):
+  def __init__(self, server_socket, peer_addr, peerID, conn_pair, seq_pair, blockchain):
     super(ConnectionThread, self).__init__()
     self.server_socket = server_socket
     self.peer_addr = peer_addr
@@ -105,6 +107,7 @@ class ConnectionThread(Thread):
     self.conn_pair = conn_pair
     self.seq_pair = seq_pair
     self.thread_pool = []
+    self.blockchain
 
   def run(self):
     # wait for new connection to server port
@@ -113,7 +116,7 @@ class ConnectionThread(Thread):
     print('new conn', conn, addr)
 
     # args must be in format (xxx,) to make it iterable
-    t2 = HandleMsgThread(conn, self.peerID, self.conn_pair, self.seq_pair)
+    t2 = HandleMsgThread(conn, self.peerID, self.conn_pair, self.seq_pair, self.blockchain)
     t2.setDaemon(True)
     t2.start()
     self.thread_pool.append(t2)
@@ -140,7 +143,7 @@ class P2P_network:
     self.peer_connectTo = []
     self.conn_peerID_pair = {}
     self.seq_peerID_pair = {self.peerID: 0}
-    self.db = Database(self.peerID)
+    self.blockchain = Blockchain(self.peerID)
     for _ in range(5):
       self._addServerSocket()
       self._addClientSocket()

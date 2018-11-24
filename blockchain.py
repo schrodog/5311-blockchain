@@ -1,6 +1,7 @@
 # %%
 from hashlib import sha256
 import time
+from database import Database
 
 class Transaction:
   def __init__(self, t):
@@ -50,10 +51,16 @@ class Block:
 
 
 class Blockchain:    
-  def __init__(self):
+  def __init__(self, peerID):
+    self.db = Database(peerID)
     self.blocks = [Block.genesis(self)]
     self.difficulty = 4
 
+  @property
+  def block_chain(self):
+    return [i.block for i in self.blocks]
+
+  @property
   def latest_block(self):
     return self.blocks[-1]
   
@@ -71,8 +78,8 @@ class Blockchain:
     self.add_block(new_block)
   
   def create_next_block(self):
-    next_index = self.latest_block().index + 1
-    previous_hash = self.latest_block().current_hash
+    next_index = self.latest_block.index + 1
+    previous_hash = self.latest_block.current_hash
     timestamp = int(str(time.time()).replace('.',''))
     nonce = 0
     next_hash = self.calculate_hash(previous_hash, timestamp, nonce)
@@ -86,7 +93,7 @@ class Blockchain:
     return next_block
   
   def add_block(self, new_block):
-    if self.check_next_block(new_block, self.latest_block()):
+    if self.check_next_block(new_block, self.latest_block):
       self.blocks.append(new_block)
     else:
       raise Exception('invalid block') 
@@ -120,11 +127,11 @@ class Blockchain:
     else:
       return False
   
-  
+
 # # %%
 
-# bc1 = Blockchain()
-# bc2 = Blockchain()
+# bc1 = Blockchain('fd')
+# bc2 = Blockchain('ds')
 
 # for i in range(2):
 #   bc1.mine()
@@ -136,11 +143,14 @@ class Blockchain:
 # [i.block for i in bc1.blocks]
 
 # # %%
+# bc1.latest_block.block
+
+# # %%
 # [i.block for i in bc2.blocks]
 
 
 # # %%
-# bc1.replaceChain(bc2.blocks)
+# bc2.replaceChain(bc1.blocks)
 
 
 
