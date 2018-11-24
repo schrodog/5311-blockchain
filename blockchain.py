@@ -20,13 +20,16 @@ class Block:
     self.transaction = b['transaction']
     self.merkle_root = b['merkle_root']
     self.index = b['index']
+
+  def __eq__(self, other):
+    return self.block == other.block  
   
   @staticmethod
   def genesis(self):
     return Block({
-      'timestamp': 1508270000000,
+      'timestamp': 15080396630448296,
       'prev_hash': 0,
-      'current_hash': '000dc75a315c77a1f9c98fb6247d03dd18ac52632d7dc6a9920261d8109b37cf',
+      'current_hash': '00000000315c77a1f9c98fb6247d03dd18ac52632d7dc6a9920261d8109b37cf',
       'nonce': 0,
       'transaction': [],
       'merkle_root': 0,
@@ -45,23 +48,17 @@ class Block:
       'index': self.index
     }
 
+
 class Blockchain:    
   def __init__(self):
-    #genesis = Block({'timestamp': time.time(), 'prev_hash': 0x0, 
-    # 'current_hash': 0x000dc75a315c77a1f9c98fb6247d03dd18ac52632d7dc6a9920261d8109b37cf, 
-    # 'nonce': 0, 'transaction':[], 'merkle_root': [], 'index': 0})
     self.blocks = [Block.genesis(self)]
-    self.diffculty = 3
-
-  @property
-  def block(self):
-    return self.blocks
+    self.difficulty = 4
 
   def latest_block(self):
     return self.blocks[-1]
   
   def check_difficulty(self, hash):
-    return hash[:self.difficulty] == '0'*self.diffculty
+    return hash[:self.difficulty] == '0'*self.difficulty
 
   def calculate_hash(self, previousHash, timestamp, nonce):
     text = previousHash + str(timestamp) + str(nonce)
@@ -76,16 +73,16 @@ class Blockchain:
   def create_next_block(self):
     next_index = self.latest_block().index + 1
     previous_hash = self.latest_block().current_hash
-    timestamp = time.time()
+    timestamp = int(str(time.time()).replace('.',''))
     nonce = 0
     next_hash = self.calculate_hash(previous_hash, timestamp, nonce)
     while not self.check_difficulty(next_hash):
       nonce += 1
-      timestamp = time.time()
+      timestamp = int(str(time.time()).replace('.',''))
       next_hash = self.calculate_hash(previous_hash, timestamp, nonce)
     
     # What is correct value for merkle root and transaction?
-    next_block = Block({'index': next_index, 'prev_hash': previous_hash, 'timestamp': timestamp, 'transaction': data, 'current_hash': next_hash, 'nonce': nonce, 'merkle_root':[]})
+    next_block = Block({'index': next_index, 'prev_hash': previous_hash, 'timestamp': timestamp, 'current_hash': next_hash, 'nonce': nonce, 'merkle_root':[], 'transaction': []})
     return next_block
   
   def add_block(self, new_block):
@@ -108,29 +105,42 @@ class Blockchain:
       return True
 
   def check_chain(self, chain):
-    if chain[0] != Block.genesis():
+    if not chain:
+      return False
+    elif chain[0] != Block.genesis(self):
       return False
 
-    return all(self.check_next_block(chain[i], chain[i+1]) for i in range(len(chain)-1))
+    return all(self.check_next_block(chain[i+1], chain[i]) for i in range(len(chain)-1))
 
   def replaceChain(self, newChain):
+    
     if self.check_chain(newChain) and (len(newChain) > len(self.blocks)):
       self.blocks = newChain
+      return True
     else:
       return False
   
-# %%
+  
+# # %%
 
-bc = Blockchain()
-bc.block[0].block
+# bc1 = Blockchain()
+# bc2 = Blockchain()
+
+# for i in range(2):
+#   bc1.mine()
+
+# for i in range(3):
+#   bc2.mine()
+
+# # %%
+# [i.block for i in bc1.blocks]
+
+# # %%
+# [i.block for i in bc2.blocks]
 
 
-
-
-
-
-
-
+# # %%
+# bc1.replaceChain(bc2.blocks)
 
 
 
