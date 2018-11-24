@@ -29,11 +29,11 @@ class Block:
   def genesis(self):
     return Block({
       'timestamp': 15080396630448296,
-      'prev_hash': 0,
+      'prev_hash': '0',
       'current_hash': '00000000315c77a1f9c98fb6247d03dd18ac52632d7dc6a9920261d8109b37cf',
       'nonce': 0,
       'transaction': [],
-      'merkle_root': 0,
+      'merkle_root': '0',
       'index': 0
     })
   
@@ -92,14 +92,17 @@ class Blockchain:
       timestamp = int(str(time.time()).replace('.',''))
       next_hash = self.calculate_hash(previous_hash, timestamp, nonce)
     
+    # TODO calculate merkle_root
+    merkle_root = '0'
+
     # What is correct value for merkle root and transaction?
-    next_block = Block({'index': next_index, 'prev_hash': previous_hash, 'timestamp': timestamp, 'current_hash': next_hash, 'nonce': nonce, 'merkle_root':[], 'transaction': []})
+    next_block = Block({'index': next_index, 'prev_hash': previous_hash, 'timestamp': timestamp, 'current_hash': next_hash, 'nonce': nonce, 'merkle_root': merkle_root, 'transaction': []})
     return next_block
   
   def add_block(self, new_block):
     if self.check_next_block(new_block, self.latest_block):
       self.blocks.append(new_block)
-      db.insert([new_block])
+      self.db.insert([new_block])
       return True
     else:
       return False
@@ -128,7 +131,7 @@ class Blockchain:
   def replaceChain(self, newChain):
     if self.check_chain(newChain) and (len(newChain) > len(self.blocks)):
       self.blocks = newChain
-      db.overwrite(newChain)
+      self.db.overwrite(newChain)
       return True
     else:
       return False

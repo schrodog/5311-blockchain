@@ -28,7 +28,7 @@ class netShell(cmd.Cmd):
   def do_broadcast(self, arg):
     self.net.broadcast(parse(arg)[0])
 
-  def do_mine(self):
+  def do_mine(self, arg):
     self.net.mine()
 
   # need to provide both (self, arg) as argument
