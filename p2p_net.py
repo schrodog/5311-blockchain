@@ -27,6 +27,28 @@ class HandleMsgThread(Thread):
     self.conn_pair = conn_pair
     self.seq_pair = seq_pair
 
+  def receive_latest_block(self, data):
+    latest_block = self.blockchain[-1]
+    if latest_block.hash == received_latest_block.prev_hash)[-1]:
+      self.blockchain.add_block(received_latest_block.prev_hash)
+    elif receive_latest_block.index > latest_block.index:
+      msg = json.dumps({'type': 'REQUEST_LATEST_BLOCK'})
+      
+      # broadcast
+      num = int(data['seq_no'])
+      if not (data['source'] in self.seq_pair):
+        self.seq_pair[data['source']] = 0
+
+      # controlled flooding
+      if num > self.seq_pair[data['source']]:
+        print('broadcast to peers')
+        self.seq_pair[data['source']] = num
+        for _id, soc in self.conn_pair.items():
+          soc.sendall(msg)
+    else:
+      pass
+
+
   def run(self):
     i = 0
     while True:
@@ -50,6 +72,16 @@ class HandleMsgThread(Thread):
       elif data['type'] == 'RECEIVE_PEERID':
         self.conn_pair[data['peerID']] = self.conn
 
+      elif data['type'] == 'REQUEST_LATEST_BLOCK':
+        if not (data['source'] in self.conn_pair):
+          return False
+        else:
+          msg = json.dumps({'type': 'REQUEST_LATEST_BLOCK', 'peerId': self.peerID, 'source':sourceId})
+          self.conn.send(bytes(msg, 'utf-8'))
+      elif data['type'] == 'RECEIVE_LATEST_BLOCK':
+        self.receive_latest_block(data['block'])
+
+          
       else:
         num = int(data['seq_no'])
         if not (data['source'] in self.seq_pair):
@@ -179,7 +211,15 @@ class P2P_network:
     'server_port': self.serverPort_pool, 'peer_connectTo': self.peer_connectTo,
     'conn_peerID': self.conn_peerID_pair, 'seq_pair': self.seq_peerID_pair })
 
-
+  # def receive_latest_block(self, receive_latest_block):
+  #   latest_block = self.db.blockchain[-1]
+  #   if latest_block.hash == received_latest_block.prev_hash)[-1]:
+  #     self.db.insert(latest_block)
+  #   elif receive_latest_block.index > latest_block.index:
+  #     msg = json.dumps({'type': 'REQUEST_LATEST_BLOCK'})
+  #     self.broadcast(msg)
+  #   else:
+  #     pass
 
 
 
