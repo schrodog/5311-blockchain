@@ -53,7 +53,7 @@ class Block:
 class Blockchain:    
   def __init__(self, peerID):
     self.db = Database(peerID)
-    bks = db.load()
+    bks = self.db.load()
     if bks:
       self.blocks = bks
     else:

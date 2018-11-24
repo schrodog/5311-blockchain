@@ -36,6 +36,9 @@ class netShell(cmd.Cmd):
   def do_info(self, arg):
     self.net.info()
 
+  def do_selfblock(self, arg):
+    print(self.net.blockchain.block_chain)
+
   def do_bye(self, arg):
     print('close')
     raise SystemExit

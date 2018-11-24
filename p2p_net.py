@@ -33,7 +33,7 @@ class HandleMsgThread(Thread):
     # self.seq_peerID_pair[self.peerID] += 1
     msg = json.dumps({'type': 'RECEIVE_LATEST_BLOCK', 'source': source, 
       'block': self.blockchain.latest_block, 'seq_no': self.seq_pair[source],
-      'sender': self.peerID ]})
+      'sender': self.peerID })
     
     # controlled flooding
     print('broadcast latest block to peers')
@@ -104,7 +104,7 @@ class HandleMsgThread(Thread):
         self.receive_latest_block(data)
 
       elif data['type'] == 'REQUEST_BLOCKCHAIN':
-        if not data['sender'] in self.conn_pair):
+        if not data['sender'] in self.conn_pair:
           pass
         else:
           msg = json.dumps({'type': 'RECEIVE_BLOCKCHAIN', 'source': data['source'],
