@@ -80,6 +80,10 @@ class Blockchain:
   def latest_block(self):
     return self.blocks[-1]
   
+  @property
+  def block_hashes(self):
+    return [i['current_hash'] for i in self.blocks]
+
   def check_difficulty(self, hash):
     return hash[:self.difficulty] == '0'*self.difficulty
 
