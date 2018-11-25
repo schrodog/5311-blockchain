@@ -2,6 +2,7 @@ import argparse
 import cmd, sys
 from p2p_net import P2P_network
 from multiprocessing import Process
+from pprint import pprint
 
 def parse(arg):
   return tuple(map(str, arg.split()))
@@ -37,7 +38,7 @@ class netShell(cmd.Cmd):
     self.net.info()
 
   def do_selfblock(self, arg):
-    print(self.net.blockchain.block_chain)
+    pprint(self.net.blockchain.block_chain)
 
   def do_bye(self, arg):
     print('close')

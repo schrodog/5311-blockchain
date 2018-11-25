@@ -9,6 +9,7 @@ import uuid
 from threading import Thread
 from blockchain import Blockchain
 from bson import ObjectId
+from pprint import pprint
 
 # %%
 
@@ -65,7 +66,7 @@ class HandleMsgThread(Thread):
         if result:
           self.broadcast_latest_block(data['source'])
       elif block['index'] > my_latest_block['index']:
-        msg = json.dumps({'type': 'REQUEST_BLOCKCHAIN', 'sender': self.peerID, 
+        msg = JSONEncoder().encode({'type': 'REQUEST_BLOCKCHAIN', 'sender': self.peerID, 
           'source': data['source']})
         self.conn_pair[data['sender']].send(bytes(msg, 'utf-8'))
 
@@ -88,7 +89,9 @@ class HandleMsgThread(Thread):
           return
       
       data = json.loads(raw_data.decode())
-      print('receive data:', data)
+      # print('receive data:', data)
+      print('receive data:')
+      print(json.dumps(data, indent=2))
       # receive connection
       if data['type'] == 'REQUEST_PEERID':
         msg = json.dumps({'type': 'RECEIVE_PEERID', 'peerID': self.peerID})
@@ -107,7 +110,7 @@ class HandleMsgThread(Thread):
           pass
         else:
           self.seq_pair[self.peerID] += 1
-          msg = json.dumps({'type': 'RECEIVE_LATEST_BLOCK', 'source': self.peerID, 
+          msg = JSONEncoder().encode({'type': 'RECEIVE_LATEST_BLOCK', 'source': self.peerID, 
             'block': self.blockchain.latest_block, 'seq_no': self.seq_pair[self.peerID]})
           self.conn_pair[data['source']].send(bytes(msg, 'utf-8'))
 
@@ -118,7 +121,7 @@ class HandleMsgThread(Thread):
         if not data['sender'] in self.conn_pair:
           pass
         else:
-          msg = json.dumps({'type': 'RECEIVE_BLOCKCHAIN', 'source': data['source'],
+          msg = JSONEncoder().encode({'type': 'RECEIVE_BLOCKCHAIN', 'source': data['source'],
             'sender': self.peerID, 'blockchain': self.blockchain.block_chain })
           self.conn_pair[data['sender']].send(bytes(msg, 'utf-8'))
 
