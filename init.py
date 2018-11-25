@@ -43,6 +43,9 @@ class netShell(cmd.Cmd):
   def do_selfblockhashes(self, arg):
     print(self.net.blockchain.block_hashes)
 
+  def do_getblock(self, arg):
+    self.net.getBlockHashFromDest(parse(arg)[0])
+
   def do_bye(self, arg):
     print('close')
     raise SystemExit

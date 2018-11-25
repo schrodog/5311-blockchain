@@ -77,6 +77,18 @@ class HandleMsgThread(Thread):
     if result:
       self.broadcast_latest_block(data['source'])
 
+  def receive_block_hashes(self, data):
+     
+    seq_num = int(data['seq_no'])
+    if not (data['source'] in self.seq_pair):
+      self.seq_pair[data['source']] = 0
+
+    # if not receive block hash from this peer before
+    if seq_num > self.seq_pair[data['source']]:
+      self.seq_pair[data['source']] = seq_num
+      if data['dest'] == self.peerID:
+        print(data['block_hashes'])
+
   def run(self):
     i = 0
     while True:
@@ -127,7 +139,18 @@ class HandleMsgThread(Thread):
 
       elif data['type'] == 'RECEIVE_BLOCKCHAIN':
         self.receive_blockchain(data)
-          
+      
+      elif data['type'] == 'REQUEST_BLOCK_HASH':
+        if data['dest'] == self.peerID:
+          self.seq_pair[self.peerID] += 1
+          msg = JSONEncoder().encode({'type': 'RECEIVE_BLOCK_HASH', 'source': self.peerID,
+            'sender': self.peerID, 'block_hashes': self.blockchain.block_hashes,
+            'dest': data['source'], 'seq_no': self.seq_pair[self.peerID] })
+          self.conn_pair[data['sender']].send(bytes(msg, 'utf-8'))
+        
+      elif data['type'] ==  'RECEIVE_BLOCK_HASH':
+          self.receive_block_hashes(data)
+
       # else:
       #   num = int(data['seq_no'])
       #   if not (data['source'] in self.seq_pair):
@@ -262,6 +285,13 @@ class P2P_network:
     for _id, soc in self.conn_peerID_pair.items():
       soc.send(bytes(msg, 'utf-8'))
 
+  def getBlockHashFromDest(self, dest_peer_id):
+    self.seq_peerID_pair[self.peerID] += 1
+    msg = JSONEncoder().encode({'type': 'REQUEST_BLOCK_HASH', 'source': self.peerID, 
+      'blockhash': self.blockchain.block_hashes,
+      'seq_no': self.seq_peerID_pair[self.peerID], 'sender': self.peerID, 'dest': dest_peer_id})
+    for _id, soc in self.conn_peerID_pair.items():
+      soc.send(bytes(msg, 'utf-8'))
 
   def info(self):
     print({'peerID': self.peerID, 'peer_ports': self.peer_ports, 
