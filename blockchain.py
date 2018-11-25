@@ -117,8 +117,11 @@ class Blockchain:
   
   def add_block(self, new_block):
     if self.check_next_block(new_block, self.latest_block):
+      print('new_block', new_block)
       self.blocks.append(new_block)
-      self.db.insert([new_block])
+      print(self.blocks)
+      self.db.insert([new_block.copy()])
+      print(self.blocks)
       return True
     else:
       return False
@@ -151,10 +154,9 @@ class Blockchain:
       return True
     else:
       return False
-  
 
 # # %%
-
+# a090e6e934
 # bc1 = Blockchain('fd')
 # bc2 = Blockchain('ds')
 

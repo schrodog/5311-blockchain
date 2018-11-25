@@ -1,8 +1,12 @@
-import argparse
+from argparse import ArgumentParser
 import cmd, sys
 from p2p_net import P2P_network
 from multiprocessing import Process
 from pprint import pprint
+
+parser = ArgumentParser()
+parser.add_argument("-u", "--user", dest="user", default=-1)
+args = parser.parse_args()
 
 def parse(arg):
   return tuple(map(str, arg.split()))
@@ -21,7 +25,7 @@ class netShell(cmd.Cmd):
     # self.main.start()
 
   def __start(self):
-    self.net = P2P_network()
+    self.net = P2P_network(args.user)
 
   def do_connect(self, arg):
     self.net.connects(parse(arg)[0])
