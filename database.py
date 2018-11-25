@@ -27,7 +27,7 @@ class Database:
     self.blockchain.insert_many(data)
   
   def load(self):
-    return [i for i in self.blockchain.find()]
+    return [i for i in self.blockchain.find({}, {'_id': False})]
 
   def close(self):
     self.main.terminate()

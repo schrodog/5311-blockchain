@@ -5,7 +5,7 @@ from multiprocessing import Process
 from pprint import pprint
 
 parser = ArgumentParser()
-parser.add_argument("-u", "--user", dest="user", default=-1)
+parser.add_argument("-u", "--user", dest="user", default="")
 args = parser.parse_args()
 
 def parse(arg):
@@ -45,7 +45,7 @@ class netShell(cmd.Cmd):
     pprint(self.net.blockchain.block_chain)
 
   def do_selfblockhashes(self, arg):
-    print(self.net.blockchain.block_hashes)
+    pprint(self.net.blockchain.block_hashes)
 
   def do_getblock(self, arg):
     self.net.getBlockHashFromDest(parse(arg)[0])

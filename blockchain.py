@@ -12,43 +12,6 @@ class Transaction:
     self.current_hash = t['current_hash']
     self.data = t['data']
 
-# class Block:
-#   def __init__(self, b):
-#     self.timestamp = b['timestamp']
-#     self.prev_hash = b['prev_hash']
-#     self.current_hash = b['current_hash']
-#     self.nonce = b['nonce']
-#     self.transaction = b['transaction']
-#     self.merkle_root = b['merkle_root']
-#     self.index = b['index']
-
-#   def __eq__(self, other):
-#     return self.block == other.block  
-  
-#   @staticmethod
-#   def genesis(self):
-#     return Block({
-#       'timestamp': 15080396630448296,
-#       'prev_hash': '0',
-#       'current_hash': '00000000315c77a1f9c98fb6247d03dd18ac52632d7dc6a9920261d8109b37cf',
-#       'nonce': 0,
-#       'transaction': [],
-#       'merkle_root': '0',
-#       'index': 0
-#     })
-  
-#   @property
-#   def block(self):
-#     return {
-#       'timestamp': self.timestamp,
-#       'prev_hash': self.prev_hash,
-#       'current_hash': self.current_hash,
-#       'nonce': self.nonce,
-#       'transaction': self.transaction,
-#       'merkle_root': self.merkle_root,
-#       'index': self.index
-#     }
-
 def genesis():
   return {
     'timestamp': 15080396630448296,
@@ -65,11 +28,12 @@ class Blockchain:
   def __init__(self, peerID):
     self.db = Database(peerID)
     bks = self.db.load()
-    print(bks)
+    # print(bks)
     if bks:
       self.blocks = bks
     else:
       self.blocks = [genesis()]
+      self.db.insert([genesis()])
     self.difficulty = 4
 
   @property
@@ -117,11 +81,8 @@ class Blockchain:
   
   def add_block(self, new_block):
     if self.check_next_block(new_block, self.latest_block):
-      print('new_block', new_block)
       self.blocks.append(new_block)
-      print(self.blocks)
       self.db.insert([new_block.copy()])
-      print(self.blocks)
       return True
     else:
       return False
@@ -141,8 +102,10 @@ class Blockchain:
 
   def check_chain(self, chain):
     if not chain:
+      print('104')
       return False
     elif chain[0] != genesis():
+      print('107')
       return False
 
     return all(self.check_next_block(chain[i+1], chain[i]) for i in range(len(chain)-1))
@@ -150,13 +113,14 @@ class Blockchain:
   def replaceChain(self, newChain):
     if self.check_chain(newChain) and (len(newChain) > len(self.blocks)):
       self.blocks = newChain
-      self.db.overwrite(newChain)
+      print('[113]',newChain)
+      self.db.overwrite(newChain.copy())
       return True
     else:
       return False
 
 # # %%
-# a090e6e934
+# a090e6e934, 9cf1e32b6f
 # bc1 = Blockchain('fd')
 # bc2 = Blockchain('ds')
 
@@ -179,6 +143,45 @@ class Blockchain:
 # # %%
 # bc2.replaceChain(bc1.blocks)
 
+
+
+
+# class Block:
+#   def __init__(self, b):
+#     self.timestamp = b['timestamp']
+#     self.prev_hash = b['prev_hash']
+#     self.current_hash = b['current_hash']
+#     self.nonce = b['nonce']
+#     self.transaction = b['transaction']
+#     self.merkle_root = b['merkle_root']
+#     self.index = b['index']
+
+#   def __eq__(self, other):
+#     return self.block == other.block  
+  
+#   @staticmethod
+#   def genesis(self):
+#     return Block({
+#       'timestamp': 15080396630448296,
+#       'prev_hash': '0',
+#       'current_hash': '00000000315c77a1f9c98fb6247d03dd18ac52632d7dc6a9920261d8109b37cf',
+#       'nonce': 0,
+#       'transaction': [],
+#       'merkle_root': '0',
+#       'index': 0
+#     })
+  
+#   @property
+#   def block(self):
+#     return {
+#       'timestamp': self.timestamp,
+#       'prev_hash': self.prev_hash,
+#       'current_hash': self.current_hash,
+#       'nonce': self.nonce,
+#       'transaction': self.transaction,
+#       'merkle_root': self.merkle_root,
+#       'index': self.index
+#     }
 
 
 

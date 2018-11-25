@@ -104,7 +104,7 @@ class HandleMsgThread(Thread):
   def run(self):
     i = 0
     while True:
-      raw_data = self.conn.recv(1024)
+      raw_data = self.conn.recv(8092)
       # connection interrupted
       if not raw_data:
         i += 1
@@ -112,10 +112,11 @@ class HandleMsgThread(Thread):
         if i > 3:
           return
       
+      # print('receive data:', raw_data)
       data = json.loads(raw_data.decode())
-      # print('receive data:', data)
       print('receive data:')
       print(json.dumps(data, indent=2))
+
       # receive connection
       if data['type'] == 'REQUEST_PEERID':
         msg = json.dumps({'type': 'RECEIVE_PEERID', 'peerID': self.peerID})
@@ -134,8 +135,9 @@ class HandleMsgThread(Thread):
           pass
         else:
           self.seq_pair[self.peerID] += 1
-          msg = JSONEncoder().encode({'type': 'RECEIVE_LATEST_BLOCK', 'source': self.peerID, 
-            'block': self.blockchain.latest_block, 'seq_no': self.seq_pair[self.peerID]})
+          msg = JSONEncoder().encode({'type': 'RECEIVE_LATEST_BLOCK', 'source': self.peerID,
+            'sender': self.peerID, 'block': self.blockchain.latest_block, 
+            'seq_no': self.seq_pair[self.peerID]})
           self.conn_pair[data['source']].send(bytes(msg, 'utf-8'))
 
       elif data['type'] == 'RECEIVE_LATEST_BLOCK':
@@ -147,6 +149,7 @@ class HandleMsgThread(Thread):
         else:
           msg = JSONEncoder().encode({'type': 'RECEIVE_BLOCKCHAIN', 'source': data['source'],
             'sender': self.peerID, 'blockchain': self.blockchain.block_chain })
+          print('[152]',msg)
           self.conn_pair[data['sender']].send(bytes(msg, 'utf-8'))
 
       elif data['type'] == 'RECEIVE_BLOCKCHAIN':
@@ -232,7 +235,7 @@ class ConnectionThread(Thread):
 
 
 class P2P_network:
-  def __init__(self, _id=-1):
+  def __init__(self, _id=""):
     self.peerID = self._getPeerID(_id)
     self.clientSocket_pool = []
     self.clientSocket_connecting = []
@@ -251,7 +254,7 @@ class P2P_network:
     print(self.serverPort_pool)
   
   def _getPeerID(self, _id):
-    if _id != -1:
+    if _id != "":
       return str(_id)
     return uuid.uuid4().hex[:10]
 
@@ -334,7 +337,7 @@ class P2P_network:
       soc.send(bytes(msg, 'utf-8'))
 
   def info(self):
-    print({'peerID': self.peerID, 'peer_ports': self.peer_ports, 
+    pprint({'peerID': self.peerID, 'peer_ports': self.peer_ports, 
     'server_port': self.serverPort_pool, 'peer_connectTo': self.peer_connectTo,
     'conn_peerID': self.conn_peerID_pair, 'seq_pair': self.seq_peerID_pair })
 
