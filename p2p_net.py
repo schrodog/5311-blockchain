@@ -89,6 +89,18 @@ class HandleMsgThread(Thread):
       if data['dest'] == self.peerID:
         print(data['block_hashes'])
 
+  def receive_data(self, data):
+     
+    seq_num = int(data['seq_no'])
+    if not (data['source'] in self.seq_pair):
+      self.seq_pair[data['source']] = 0
+
+    # if not receive block hash from this peer before
+    if seq_num > self.seq_pair[data['source']]:
+      self.seq_pair[data['source']] = seq_num
+      if data['dest'] == self.peerID:
+        pprint(data['data_detail'])
+
   def run(self):
     i = 0
     while True:
@@ -149,8 +161,29 @@ class HandleMsgThread(Thread):
           self.conn_pair[data['sender']].send(bytes(msg, 'utf-8'))
         
       elif data['type'] ==  'RECEIVE_BLOCK_HASH':
-          self.receive_block_hashes(data)
+        self.receive_block_hashes(data)
 
+      elif data['type'] == 'REQUEST_DATA':
+        if data['dest'] == self.peerID:
+          self.seq_pair[self.peerID] += 1
+          if data['data_type'] == 'block':
+            block = (next(item for item in self.blockchain.block_chain if item["current_hash"] == data['hash']))
+            if block is not None:
+              msg = JSONEncoder().encode({'type': 'RECEIVE_DATA', 'source': self.peerID,
+                'sender': self.peerID, 'data_detail': block,
+                'dest': data['source'], 'seq_no': self.seq_pair[self.peerID],
+                'data_type': data['data_type'] })
+              self.conn_pair[data['sender']].send(bytes(msg, 'utf-8'))
+            else:
+              pass
+          elif data['data_type'] == 'tx':
+            #TODO get transaction by hash
+            pass
+          else:
+            pass
+      
+      elif data['type'] ==  'RECEIVE_DATA':
+        self.receive_data(data)
       # else:
       #   num = int(data['seq_no'])
       #   if not (data['source'] in self.seq_pair):
@@ -288,8 +321,15 @@ class P2P_network:
   def getBlockHashFromDest(self, dest_peer_id):
     self.seq_peerID_pair[self.peerID] += 1
     msg = JSONEncoder().encode({'type': 'REQUEST_BLOCK_HASH', 'source': self.peerID, 
-      'blockhash': self.blockchain.block_hashes,
       'seq_no': self.seq_peerID_pair[self.peerID], 'sender': self.peerID, 'dest': dest_peer_id})
+    for _id, soc in self.conn_peerID_pair.items():
+      soc.send(bytes(msg, 'utf-8'))
+
+  def getDataByHash(self, dest_peer_id, data_type, curr_hash):
+    self.seq_peerID_pair[self.peerID] += 1
+    msg = JSONEncoder().encode({'type': 'REQUEST_DATA', 'source': self.peerID, 
+      'seq_no': self.seq_peerID_pair[self.peerID], 'sender': self.peerID, 'dest': dest_peer_id,
+      'data_type': data_type, 'hash': curr_hash})
     for _id, soc in self.conn_peerID_pair.items():
       soc.send(bytes(msg, 'utf-8'))
 
