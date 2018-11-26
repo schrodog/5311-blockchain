@@ -14,10 +14,10 @@ class Transaction:
 
 def genesis():
   return {
-    'timestamp': 15080396630448296,
+    'timestamp': 15432153057109854,
     'prev_hash': '0',
-    'current_hash': '00000000315c77a1f9c98fb6247d03dd18ac52632d7dc6a9920261d8109b37cf',
-    'nonce': 0,
+    'current_hash': '00008f991666bb70a0286a49b48d7aa6a3a5cbc521b7bbac72b1b6881bad5b77',
+    'nonce': 28435,
     'transaction': [],
     'merkle_root': '0',
     'index': 0

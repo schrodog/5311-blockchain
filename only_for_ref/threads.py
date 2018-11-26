@@ -3,54 +3,42 @@ import threading
 import time
 import logging
 
-class StoppableThread(threading.Thread):
-    """Thread class with a stop() method. The thread itself has to check
-    regularly for the stopped() condition."""
+class T2(threading.Thread):
+  def __init__(self, num):
+    super(T2, self).__init__()
+    print('num is',num)
 
-    def __init__(self):
-        print( "base init", file=sys.stderr )
-        super(StoppableThread, self).__init__()
-        self._stopper = threading.Event()          
-        # ! must not use _stop
+  def run(self):
+    i = 0
+    while i<3:
+      print("hello world")
+      if i>1:
+        return
+      print("unreachable")
+      i += 1
 
-    def stopit(self):                              
-      #  (avoid confusion)
-        print( "base stop()", file=sys.stderr )
-        self._stopper.set()                        
-        # ! must not use _stop
+class T1(threading.Thread):
+  def __init__(self):
+    super(T1, self).__init__()
+    self.n = 1
 
-    def stopped(self):
-        return self._stopper.is_set()              
-        # ! must not use _stop
-
-
-class datalogger(StoppableThread):
-    """
-    """
-
-    import time
-
-    def __init__(self, outfile):
-      """
-      """
-      StoppableThread.__init__(self)
-      self.outfile = outfile
-      print( "thread init", file=sys.stderr )
-
-    def run(self):
-      """
-      """
-      print( "thread running", file=sys.stderr )
-      while not self.stopped():
-        print( self.outfile , file=sys.stderr)
-        time.sleep(0.33)
-      print( "thread ending", file=sys.stderr )
+  def run(self):
+    while True:
+      t2 = T2(self.n)
+      t2.setDaemon(True)
+      t2.start()
+      # while True:
+      print("next")
+      t2.join()
+      self.n += 1
+      if self.n > 5:
+        return
+      # break
 
 
-test = datalogger("test.txt")
-test.start()
-time.sleep(3)
-logging.debug("stopping thread")
-test.stopit()                                      #  (avoid confusion)
-logging.debug("waiting for thread to finish")
-test.join()
+t1 = T1()
+t1.start()
+t1.join()
+
+
+

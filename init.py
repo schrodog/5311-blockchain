@@ -48,11 +48,15 @@ class netShell(cmd.Cmd):
     pprint(self.net.blockchain.block_hashes)
 
   def do_getblock(self, arg):
-    self.net.getBlockHashFromDest(parse(arg)[0])
+    if len(arg) == 1:
+      self.net.getBlockHashFromDest(parse(arg)[0])
 
   def do_getdata(self, arg):
-    dest_peer_id, data_type, curr_hash = parse(arg)
-    self.net.getDataByHash(dest_peer_id, data_type, curr_hash)
+    if len(arg) == 3:
+      dest_peer_id, data_type, curr_hash = parse(arg)
+      self.net.getDataByHash(dest_peer_id, data_type, curr_hash)
+    else:
+      print('please input [peer id, data type(block/tx), hash value]')
 
   def do_bye(self, arg):
     print('close')
