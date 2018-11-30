@@ -24,7 +24,7 @@ console = logging.StreamHandler()
 console.setLevel(logging.INFO)
 
 class HandleMsgThread(Thread):
-  def __init__(self, conn, peerID, conn_pair, seq_pair, blockchain):
+  def __init__(self, conn, peerID, conn_pair, seq_pair, blockchain, pendingTx):
     # to avoid not calling thread.__init__() error
     super(HandleMsgThread, self).__init__()
     self.conn = conn
@@ -33,6 +33,7 @@ class HandleMsgThread(Thread):
     self.conn_pair = conn_pair
     self.seq_pair = seq_pair
     self.blockchain = blockchain
+    self.pendingTx = pendingTx
 
   def updateSeq(self, update=True):
     if update:
@@ -113,6 +114,8 @@ class HandleMsgThread(Thread):
     if data['peerID'] in self.conn_pair:
       self.conn_pair[data['peerID']].send(bytes(msg, 'utf-8'))        
 
+  def check_transaction(self, data):
+
 
   def run(self):
     while True:
@@ -169,38 +172,41 @@ class HandleMsgThread(Thread):
       elif data['type'] == 'RECEIVE_BLOCKCHAIN':
         self.receive_blockchain(data)
       
-      elif data['type'] == 'REQUEST_BLOCK_HASH':
-        if data['dest'] == self.peerID:
-          self.updateSeq()
-          msg = JSONEncoder().encode({'type': 'RECEIVE_BLOCK_HASH', 'source': self.peerID,
-            'sender': self.peerID, 'block_hashes': self.blockchain.block_hashes,
-            'dest': data['source'], 'seq_no': self.seq_pair[self.peerID] })
-          self.conn_pair[data['sender']].send(bytes(msg, 'utf-8'))
+      # elif data['type'] == 'REQUEST_BLOCK_HASH':
+      #   if data['dest'] == self.peerID:
+      #     self.updateSeq()
+      #     msg = JSONEncoder().encode({'type': 'RECEIVE_BLOCK_HASH', 'source': self.peerID,
+      #       'sender': self.peerID, 'block_hashes': self.blockchain.block_hashes,
+      #       'dest': data['source'], 'seq_no': self.seq_pair[self.peerID] })
+      #     self.conn_pair[data['sender']].send(bytes(msg, 'utf-8'))
         
-      elif data['type'] ==  'RECEIVE_BLOCK_HASH':
-        self.receive_block_hashes(data)
+      # elif data['type'] ==  'RECEIVE_BLOCK_HASH':
+      #   self.receive_block_hashes(data)
 
-      elif data['type'] == 'REQUEST_DATA':
-        if data['dest'] == self.peerID:
-          # self.blockchain.updateSeq()
-          if data['data_type'] == 'block':
-            block = (next(item for item in self.blockchain.block_chain if item["current_hash"] == data['hash']))
-            if block is not None:
-              msg = JSONEncoder().encode({'type': 'RECEIVE_DATA', 'source': self.peerID,
-                'sender': self.peerID, 'data_detail': block,
-                'dest': data['source'], 'seq_no': self.seq_pair[self.peerID],
-                'data_type': data['data_type'] })
-              self.conn_pair[data['sender']].send(bytes(msg, 'utf-8'))
-            else:
-              pass
-          elif data['data_type'] == 'tx':
-            #TODO get transaction by hash
-            pass
-          else:
-            pass
+      # elif data['type'] == 'REQUEST_DATA':
+      #   if data['dest'] == self.peerID:
+      #     # self.blockchain.updateSeq()
+      #     if data['data_type'] == 'block':
+      #       block = (next(item for item in self.blockchain.block_chain if item["current_hash"] == data['hash']))
+      #       if block is not None:
+      #         msg = JSONEncoder().encode({'type': 'RECEIVE_DATA', 'source': self.peerID,
+      #           'sender': self.peerID, 'data_detail': block,
+      #           'dest': data['source'], 'seq_no': self.seq_pair[self.peerID],
+      #           'data_type': data['data_type'] })
+      #         self.conn_pair[data['sender']].send(bytes(msg, 'utf-8'))
+      #       else:
+      #         pass
+      #     elif data['data_type'] == 'tx':
+      #       #TODO get transaction by hash
+      #       pass
+      #     else:
+      #       pass
       
-      elif data['type'] ==  'RECEIVE_DATA':
-        self.receive_data(data)
+      # elif data['type'] == 'RECEIVE_DATA':
+      #   self.receive_data(data)
+
+      elif data['type'] == 'RECEIVE_TRANSACTION':
+        self.pendingTx.append(data)
 
 
 

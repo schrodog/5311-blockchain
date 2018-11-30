@@ -26,9 +26,10 @@ class A:
     self.b = B(self.a)
 
 
-a = A()
-a.a, a.b.a
+# %%
+import uuid
 
+uuid.uuid4().hex[:20]
 
 
 

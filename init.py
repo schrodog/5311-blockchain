@@ -44,19 +44,26 @@ class netShell(cmd.Cmd):
   def do_selfblock(self, arg):
     pprint(self.net.blockchain.block_chain)
 
-  def do_selfblockhashes(self, arg):
-    pprint(self.net.blockchain.block_hashes)
-
-  def do_getblock(self, arg):
-    if len(arg) == 1:
-      self.net.getBlockHashFromDest(parse(arg)[0])
-
-  def do_getdata(self, arg):
-    if len(arg) == 3:
-      dest_peer_id, data_type, curr_hash = parse(arg)
-      self.net.getDataByHash(dest_peer_id, data_type, curr_hash)
+  def do_transaction(self, arg):
+    args = parse(arg)
+    if len(args) == 2:
+      self.net.broadcastTransaction(args[0], args[1])
     else:
-      print('please input [peer id, data type(block/tx), hash value]')
+      print('Please input destination id, value')
+
+  # def do_selfblockhashes(self, arg):
+  #   pprint(self.net.blockchain.block_hashes)
+
+  # def do_getblock(self, arg):
+  #   if len(arg) == 1:
+  #     self.net.getBlockHashFromDest(parse(arg)[0])
+
+  # def do_getdata(self, arg):
+  #   if len(arg) == 3:
+  #     dest_peer_id, data_type, curr_hash = parse(arg)
+  #     self.net.getDataByHash(dest_peer_id, data_type, curr_hash)
+  #   else:
+  #     print('please input [peer id, data type(block/tx), hash value]')
 
   def do_bye(self, arg):
     print('close')

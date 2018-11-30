@@ -4,22 +4,16 @@ import time
 from database import Database
 from pprint import pprint
 
-class Transaction:
-  def __init__(self, t):
-    self.timestamp = t['timestamp']
-    self.source_address = t['source_address']
-    self.desc_address = t['desc_address']
-    self.prev_hash = t['prev_hash']
-    self.current_hash = t['current_hash']
-    self.data = t['data']
-
 def genesis():
   return {
     'timestamp': 15432153057109854,
     'prev_hash': '0',
     'current_hash': '00008f991666bb70a0286a49b48d7aa6a3a5cbc521b7bbac72b1b6881bad5b77',
     'nonce': 28435,
-    'transaction': [],
+    'transaction': [{
+      'in': 'coinbase', [{'addr': , 'value': , 'prev_out': }] 
+      'out': [{'addr': '', 'value': 100 }], 
+      'timestamp': 15432153057109854, 'hash':  }],
     'merkle_root': '0',
     'index': 0
   }
@@ -28,8 +22,9 @@ def genesis():
 class Blockchain:    
   def __init__(self, peerID):
     self.db = Database(peerID)
-    seq, bks = self.db.load()
+    seq, unspent, bks = self.db.load()
     self.seq_pair = seq
+    self.unspent = unspent
 
     if bks:
       self.blocks = bks
@@ -119,7 +114,7 @@ class Blockchain:
       self.db.overwrite(newChain.copy())
       return True
     else:
-      return False
+      return False    
 
   def updateSeq(self, seq):
     self.db.updateSeq(seq)

@@ -18,8 +18,11 @@ class Database:
     self.db = client.blockchain_db
     self.blockchain = self.db[peerID].blockchain
     self.seq = self.db[peerID].seq
+    self.unspent = self.db[peerID].unspent
     if len([i for i in self.seq.find()]) == 0:
       self.seq.insert_one({self.peerID: 0})
+    if not [i for i in self.unspent.find()]:
+      self.unspent.insert_one({})
 
   def insert(self, data):
     self.blockchain.insert_many(data)
@@ -34,7 +37,8 @@ class Database:
   
   def load(self):
     seq = [i for i in self.seq.find({}, {'_id': False})]
-    return seq[0], [i for i in self.blockchain.find({}, {'_id': False})]
+    unspent = [i for i in self.unspent.find({}, {'_id': False})]
+    return seq[0], unspent, [i for i in self.blockchain.find({}, {'_id': False})]
 
 
   def close(self):

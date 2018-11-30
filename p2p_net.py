@@ -19,7 +19,7 @@ console.setLevel(logging.INFO)
 
 
 class ConnectionThread(Thread):
-  def __init__(self, server_socket, peer_addr, peerID, conn_pair, seq_pair, blockchain, serverPort_pool, serverPort):
+  def __init__(self, server_socket, peer_addr, peerID, conn_pair, seq_pair, blockchain, serverPort_pool, serverPort, pendingTx):
     super(ConnectionThread, self).__init__()
     self.server_socket = server_socket
     self.peer_addr = peer_addr
@@ -30,6 +30,7 @@ class ConnectionThread(Thread):
     self.blockchain = blockchain
     self.serverPort_pool = serverPort_pool
     self.serverPort = serverPort
+    self.pendingTx = pendingTx
 
   def run(self):
     # wait for new connection to server port
@@ -43,7 +44,7 @@ class ConnectionThread(Thread):
       self.serverPort_pool.remove(self.serverPort)
 
       # args must be in format (xxx,) to make it iterable
-      self.th = HandleMsgThread(conn, self.peerID, self.conn_pair, self.seq_pair, self.blockchain)
+      self.th = HandleMsgThread(conn, self.peerID, self.conn_pair, self.seq_pair, self.blockchain, self.pendingTx)
       self.th.setDaemon(True)
       print("connection from", addr, self.th)
 
@@ -75,8 +76,11 @@ class P2P_network:
     self.conn_peerID_pair = {}    # existing socket-peerID pair
     self.blockchain = Blockchain(self.peerID)
     self.seq_peerID_pair = self.blockchain.seq_pair   # existing seq numbexr-peerID pair
+    # self.unspent = self.blockchain.unspent
+    self.unspent = self._analyse_unspent()
     self._addServerSocket()
     self._addClientSocket()
+    self.pendingTx = []
 
     print(self.serverPort_pool)
   
@@ -85,6 +89,10 @@ class P2P_network:
       return str(_id)
     return uuid.uuid4().hex[:20]
 
+  def _analyse_unspent(self):
+    all_tx = [i['transaction'] for i in self.blockchain]
+    
+
   def _createServerSocket(self):
     while True:
       try:
@@ -92,7 +100,7 @@ class P2P_network:
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.bind((host_name, port))
         server_socket.listen()
-        t = ConnectionThread(server_socket, self.peer_ports, self.peerID, self.conn_peerID_pair, self.seq_peerID_pair, self.blockchain, self.serverPort_pool, port)
+        t = ConnectionThread(server_socket, self.peer_ports, self.peerID, self.conn_peerID_pair, self.seq_peerID_pair, self.blockchain, self.serverPort_pool, port, self.pendingTx)
         t.setDaemon(True)
         t.start()
         return (server_socket, port, t)
@@ -141,9 +149,17 @@ class P2P_network:
     self.updateSeqNum()
     msg = json.dumps({'type': 'txt', 'source': self.peerID, 'data': str(txt),
                       'seq_no': self.seq_peerID_pair[self.peerID]})
-
     for key,soc in self.conn_peerID_pair.items():
       soc.sendall(bytes(msg, 'utf-8'))
+
+  def broadcastTransaction(self, dest_addr, data):
+    self.updateSeqNum()
+    msg = json.dumps({'type': 'RECEIVE_TRANSACTION', 'source': self.peerID, 'data': data,
+                      'seq_no': self.seq_peerID_pair[self.peerID], 'source_addr': self.peerID,
+                      'dest_addr': dest_addr})
+    for key,soc in self.conn_peerID_pair.items():
+      soc.sendall(bytes(msg, 'utf-8'))
+
 
   def mine(self):
     self.blockchain.mine()
@@ -154,20 +170,20 @@ class P2P_network:
     for _id, soc in self.conn_peerID_pair.items():
       soc.send(bytes(msg, 'utf-8'))
 
-  def getBlockHashFromDest(self, dest_peer_id):
-    self.updateSeqNum()
-    msg = JSONEncoder().encode({'type': 'REQUEST_BLOCK_HASH', 'source': self.peerID, 
-      'seq_no': self.seq_peerID_pair[self.peerID], 'sender': self.peerID, 'dest': dest_peer_id})
-    for _id, soc in self.conn_peerID_pair.items():
-      soc.send(bytes(msg, 'utf-8'))
+  # def getBlockHashFromDest(self, dest_peer_id):
+  #   self.updateSeqNum()
+  #   msg = JSONEncoder().encode({'type': 'REQUEST_BLOCK_HASH', 'source': self.peerID, 
+  #     'seq_no': self.seq_peerID_pair[self.peerID], 'sender': self.peerID, 'dest': dest_peer_id})
+  #   for _id, soc in self.conn_peerID_pair.items():
+  #     soc.send(bytes(msg, 'utf-8'))
 
-  def getDataByHash(self, data_type, curr_hash):
-    self.updateSeqNum()
-    msg = JSONEncoder().encode({'type': 'REQUEST_DATA', 'source': self.peerID, 
-      'seq_no': self.seq_peerID_pair[self.peerID], 'sender': self.peerID, 'dest': dest_peer_id,
-      'data_type': data_type, 'hash': curr_hash})
-    for _id, soc in self.conn_peerID_pair.items():
-      soc.send(bytes(msg, 'utf-8'))
+  # def getDataByHash(self, data_type, curr_hash):
+  #   self.updateSeqNum()
+  #   msg = JSONEncoder().encode({'type': 'REQUEST_DATA', 'source': self.peerID, 
+  #     'seq_no': self.seq_peerID_pair[self.peerID], 'sender': self.peerID, 'dest': dest_peer_id,
+  #     'data_type': data_type, 'hash': curr_hash})
+  #   for _id, soc in self.conn_peerID_pair.items():
+  #     soc.send(bytes(msg, 'utf-8'))
 
   def info(self):
     pprint({'peerID': self.peerID,       
