@@ -91,7 +91,10 @@ class P2P_network:
 
   def _analyse_unspent(self):
     all_tx = [i['transaction'] for i in self.blockchain]
-    
+    prev_outs = [(j['addr'], j['prev_out']) for j in [i['in'] \
+      for i in all_tx] if j['addr'] != 'coinbase']
+    outs = [(j['addr'], i['hash'], j['value']) for j in i['out'] for i in tx]
+    return [j for j in outs if all([i != j[:2] for i in prev_outs])]
 
   def _createServerSocket(self):
     while True:
@@ -152,17 +155,53 @@ class P2P_network:
     for key,soc in self.conn_peerID_pair.items():
       soc.sendall(bytes(msg, 'utf-8'))
 
-  def broadcastTransaction(self, dest_addr, data):
-    self.updateSeqNum()
-    msg = json.dumps({'type': 'RECEIVE_TRANSACTION', 'source': self.peerID, 'data': data,
-                      'seq_no': self.seq_peerID_pair[self.peerID], 'source_addr': self.peerID,
-                      'dest_addr': dest_addr})
-    for key,soc in self.conn_peerID_pair.items():
-      soc.sendall(bytes(msg, 'utf-8'))
+  def checkInOut(self, value):
+    # search for single output satisfied
+    for i in self.unspent: 
+      if self.peerID == i[0] and value <= i[2]:
+        return i
+    # search for multiple source of output
+    balance = 0
+    ins = [] 
+    for i in self.unspent:
+      if self.peerID == i[0]:
+        balance += i[2]
+        ins.append(i)
+      if balance >= value:
+        return ins
+    return False
+
+  def addPendingTransaction(self):
+    result = []
+    for tx in self.pendingTx:
+      total_out = tx['value']
+      ins = self.checkInOut(total_out)
+      if ins:
+        total_in = sum([i[2] for i in ins])
+        d = {'in': [{'addr': tx['source_addr'], 'value': i[2], 'prev_out': i[1]} for i in ins],
+          'out': [{'addr': tx['dest_addr'], 'value': total_out}]}
+        if total_in > total_out:
+          d['out'].append({'addr': tx['source_addr'], 'value': total_in-total_out})
+        result.append(d)
+    return result
+
+  # assume only owner of coin can be sender of transaction
+  def broadcastTransaction(self, dest_addr, value):
+    if self.checkInOut(value):
+      self.updateSeqNum()
+      msg = json.dumps({'type': 'RECEIVE_TRANSACTION', 'source': self.peerID, 'value': value,
+                        'seq_no': self.seq_peerID_pair[self.peerID], 'source_addr': self.peerID,
+                        'dest_addr': dest_addr})
+      for key,soc in self.conn_peerID_pair.items():
+        soc.sendall(bytes(msg, 'utf-8'))
+    else:
+      print('You do not have enough value to do transaction')
+
 
 
   def mine(self):
-    self.blockchain.mine()
+    tx = self.addPendingTransaction()
+    self.blockchain.mine(tx)
     self.updateSeqNum()
     msg = JSONEncoder().encode({'type': 'RECEIVE_LATEST_BLOCK', 'source': self.peerID, 
       'block': self.blockchain.latest_block,

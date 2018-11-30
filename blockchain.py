@@ -11,10 +11,11 @@ def genesis():
     'current_hash': '00008f991666bb70a0286a49b48d7aa6a3a5cbc521b7bbac72b1b6881bad5b77',
     'nonce': 28435,
     'transaction': [{
-      'in': 'coinbase', [{'addr': , 'value': , 'prev_out': }] 
-      'out': [{'addr': '', 'value': 100 }], 
-      'timestamp': 15432153057109854, 'hash':  }],
-    'merkle_root': '0',
+      'in': [{'addr': 'coinbase'}]
+      'out': [{'addr': '7066edfd21d5b7dd9194', 'value': 100 }], 
+      'timestamp': 15432153057109854, 
+      'hash': 'b1d7c89f0fcecd0d8403a49ad0921918417228e0bb1ddb6c7b89350137624275'}],
+    'merkle_root': 'b1d7c89f0fcecd0d8403a49ad0921918417228e0bb1ddb6c7b89350137624275',
     'index': 0
   }
 
@@ -35,7 +36,7 @@ class Blockchain:
 
   @property
   def block_chain(self):
-    return [i for i in self.blocks]
+    return list(self.blocks)
 
   @property
   def latest_block(self):
@@ -54,11 +55,11 @@ class Blockchain:
     s.update(text.encode())
     return s.hexdigest()
   
-  def mine(self):
-    new_block = self.create_next_block()
+  def mine(self, tx=''):
+    new_block = self.create_next_block(tx)
     self.add_block(new_block)
   
-  def create_next_block(self):
+  def create_next_block(self, tx=''):
     next_index = self.latest_block['index'] + 1
     previous_hash = self.latest_block['current_hash']
     timestamp = int(str(time.time()).replace('.',''))
@@ -69,11 +70,15 @@ class Blockchain:
       timestamp = int(str(time.time()).replace('.',''))
       next_hash = self.calculate_hash(previous_hash, timestamp, nonce)
     
-    # TODO calculate merkle_root
-    merkle_root = '0'
-
     # What is correct value for merkle root and transaction?
-    next_block = {'index': next_index, 'prev_hash': previous_hash, 'timestamp': timestamp, 'current_hash': next_hash, 'nonce': nonce, 'merkle_root': merkle_root, 'transaction': []}
+    next_block = {'index': next_index, 'prev_hash': previous_hash, 'timestamp': timestamp, 'current_hash': next_hash, 'nonce': nonce, 
+    'transaction': [{'in': [], 'out': [], 'timestamp': ,'hash': }]}
+    # TODO calculate merkle_root
+    if tx:
+      next_block['transaction'].concat(tx)
+    
+    next_block['merkle_root'] = 
+
     return next_block
   
   def add_block(self, new_block):
