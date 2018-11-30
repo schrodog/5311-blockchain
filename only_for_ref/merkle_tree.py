@@ -20,7 +20,6 @@ msg4 = "e9a66845e05d5abc0ad04ec80f774a7e585c6e8db975962d069a522137b80c1d".encode
 def create_hex(msg):
   return sha256(msg).digest()
 
-
 def reverse_hex(inp):
   return reduce(lambda x, y: x+y, [inp[i: i+2] for i in range(len(inp), -1, -2)])
 

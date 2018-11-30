@@ -16,7 +16,10 @@ class Database:
   def _initDB(self, peerID):
     client = MongoClient('localhost', self.port)
     self.db = client.blockchain_db
-    self.blockchain = self.db[peerID]
+    self.blockchain = self.db[peerID].blockchain
+    self.seq = self.db[peerID].seq
+    if len([i for i in self.seq.find()]) == 0:
+      self.seq.insert_one({self.peerID: 0})
 
   def insert(self, data):
     self.blockchain.insert_many(data)
@@ -25,9 +28,14 @@ class Database:
     # request = [DeleteMany(filter={}), InsertMany(data)]
     self.blockchain.delete_many(filter={})
     self.blockchain.insert_many(data)
+
+  def updateSeq(self, seq):
+    self.seq.replace_one({}, seq)
   
   def load(self):
-    return [i for i in self.blockchain.find({}, {'_id': False})]
+    seq = [i for i in self.seq.find({}, {'_id': False})]
+    return seq[0], [i for i in self.blockchain.find({}, {'_id': False})]
+
 
   def close(self):
     self.main.terminate()
@@ -41,4 +49,10 @@ class Database:
 # b.overwrite([{'f':3}])
 # b.insert([{'c': 1, 'd': 2}])
 # print(b.load())
+
+# d5b7dd9194       7066edfd21
+
+
+
+
 

@@ -74,7 +74,7 @@ class P2P_network:
     self.peer_ports = []
     self.conn_peerID_pair = {}    # existing socket-peerID pair
     self.blockchain = Blockchain(self.peerID)
-    self.seq_peerID_pair = {self.peerID: 0}   # existing seq number-peerID pair
+    self.seq_peerID_pair = self.blockchain.seq_pair   # existing seq numbexr-peerID pair
     self._addServerSocket()
     self._addClientSocket()
 
@@ -83,7 +83,7 @@ class P2P_network:
   def _getPeerID(self, _id):
     if _id != "":
       return str(_id)
-    return uuid.uuid4().hex[:10]
+    return uuid.uuid4().hex[:20]
 
   def _createServerSocket(self):
     while True:
@@ -132,9 +132,13 @@ class P2P_network:
 
     msg = json.dumps({'type': 'REQUEST_PEERID', 'peerID': self.peerID})
     soc.sendall(bytes(msg, 'utf-8'))
+
+  def updateSeqNum(self):
+    self.seq_peerID_pair[self.peerID] += 1
+    self.blockchain.updateSeq(self.seq_peerID_pair)
     
   def broadcast(self, txt):
-    self.seq_peerID_pair[self.peerID] += 1
+    self.updateSeqNum()
     msg = json.dumps({'type': 'txt', 'source': self.peerID, 'data': str(txt),
                       'seq_no': self.seq_peerID_pair[self.peerID]})
 
@@ -143,7 +147,7 @@ class P2P_network:
 
   def mine(self):
     self.blockchain.mine()
-    self.seq_peerID_pair[self.peerID] += 1
+    self.updateSeqNum()
     msg = JSONEncoder().encode({'type': 'RECEIVE_LATEST_BLOCK', 'source': self.peerID, 
       'block': self.blockchain.latest_block,
       'seq_no': self.seq_peerID_pair[self.peerID], 'sender': self.peerID })
@@ -151,14 +155,14 @@ class P2P_network:
       soc.send(bytes(msg, 'utf-8'))
 
   def getBlockHashFromDest(self, dest_peer_id):
-    self.seq_peerID_pair[self.peerID] += 1
+    self.updateSeqNum()
     msg = JSONEncoder().encode({'type': 'REQUEST_BLOCK_HASH', 'source': self.peerID, 
       'seq_no': self.seq_peerID_pair[self.peerID], 'sender': self.peerID, 'dest': dest_peer_id})
     for _id, soc in self.conn_peerID_pair.items():
       soc.send(bytes(msg, 'utf-8'))
 
-  def getDataByHash(self, dest_peer_id, data_type, curr_hash):
-    self.seq_peerID_pair[self.peerID] += 1
+  def getDataByHash(self, data_type, curr_hash):
+    self.updateSeqNum()
     msg = JSONEncoder().encode({'type': 'REQUEST_DATA', 'source': self.peerID, 
       'seq_no': self.seq_peerID_pair[self.peerID], 'sender': self.peerID, 'dest': dest_peer_id,
       'data_type': data_type, 'hash': curr_hash})

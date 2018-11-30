@@ -13,7 +13,7 @@ def parse(arg):
 
 
 class netShell(cmd.Cmd):
-  intro = "Welcome to p2p shell"
+  intro = "Welcome to blockchain"
   prompt = ">> "
   file = None
 

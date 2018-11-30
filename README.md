@@ -13,4 +13,20 @@ Sender
 Receiver
 <-- RECEIVE, PEERID
 
+# Problems
+1. how to dynamically add server socket?
+2. add transaction functions
+3. check block by hash
+4. auto mine
+5. construct merkle tree
+6. check merkle root
+7. update seq number
+
+
+
+
+
+
+
+
 

@@ -34,6 +34,11 @@ class HandleMsgThread(Thread):
     self.seq_pair = seq_pair
     self.blockchain = blockchain
 
+  def updateSeq(self, update=True):
+    if update:
+      self.seq_pair[self.peerID] += 1
+    self.blockchain.updateSeq(self.seq_pair)
+
   # after checking confirm latest block valid, redirect latest block
   def broadcast_latest_block(self, source):
     # self.seq_peerID_pair[self.peerID] += 1
@@ -46,16 +51,17 @@ class HandleMsgThread(Thread):
     for _id, soc in self.conn_pair.items():
       soc.send(bytes(msg, 'utf-8'))
 
-
   def receive_latest_block(self, data):
     block = data['block']
     seq_num = int(data['seq_no'])
     if not (data['source'] in self.seq_pair):
       self.seq_pair[data['source']] = 0
+      self.updateSeq(False)
 
     # if not receive latest block from this peer before
     if seq_num > self.seq_pair[data['source']]:
       self.seq_pair[data['source']] = seq_num
+      self.updateSeq(False)
 
       my_latest_block = self.blockchain.latest_block
       if my_latest_block['current_hash'] == data['block']['prev_hash']:
@@ -79,10 +85,12 @@ class HandleMsgThread(Thread):
     seq_num = int(data['seq_no'])
     if not (data['source'] in self.seq_pair):
       self.seq_pair[data['source']] = 0
+      self.updateSeq(False)
 
     # if not receive block hash from this peer before
     if seq_num > self.seq_pair[data['source']]:
       self.seq_pair[data['source']] = seq_num
+      self.updateSeq(False)
       if data['dest'] == self.peerID:
         print(data['block_hashes'])
 
@@ -91,10 +99,12 @@ class HandleMsgThread(Thread):
     seq_num = int(data['seq_no'])
     if not (data['source'] in self.seq_pair):
       self.seq_pair[data['source']] = 0
+      self.updateSeq(False)
 
     # if not receive block hash from this peer before
     if seq_num > self.seq_pair[data['source']]:
       self.seq_pair[data['source']] = seq_num
+      self.updateSeq(False)
       if data['dest'] == self.peerID:
         pprint(data['data_detail'])
 
@@ -138,7 +148,7 @@ class HandleMsgThread(Thread):
         if not (data['source'] in self.conn_pair):
           pass
         else:
-          self.seq_pair[self.peerID] += 1
+          self.updateSeq()
           msg = JSONEncoder().encode({'type': 'RECEIVE_LATEST_BLOCK', 'source': self.peerID,
             'sender': self.peerID, 'block': self.blockchain.latest_block, 
             'seq_no': self.seq_pair[self.peerID]})
@@ -161,7 +171,7 @@ class HandleMsgThread(Thread):
       
       elif data['type'] == 'REQUEST_BLOCK_HASH':
         if data['dest'] == self.peerID:
-          self.seq_pair[self.peerID] += 1
+          self.updateSeq()
           msg = JSONEncoder().encode({'type': 'RECEIVE_BLOCK_HASH', 'source': self.peerID,
             'sender': self.peerID, 'block_hashes': self.blockchain.block_hashes,
             'dest': data['source'], 'seq_no': self.seq_pair[self.peerID] })
@@ -172,7 +182,7 @@ class HandleMsgThread(Thread):
 
       elif data['type'] == 'REQUEST_DATA':
         if data['dest'] == self.peerID:
-          self.seq_pair[self.peerID] += 1
+          # self.blockchain.updateSeq()
           if data['data_type'] == 'block':
             block = (next(item for item in self.blockchain.block_chain if item["current_hash"] == data['hash']))
             if block is not None:

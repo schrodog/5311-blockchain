@@ -2,6 +2,7 @@
 from hashlib import sha256
 import time
 from database import Database
+from pprint import pprint
 
 class Transaction:
   def __init__(self, t):
@@ -27,8 +28,9 @@ def genesis():
 class Blockchain:    
   def __init__(self, peerID):
     self.db = Database(peerID)
-    bks = self.db.load()
-    # print(bks)
+    seq, bks = self.db.load()
+    self.seq_pair = seq
+
     if bks:
       self.blocks = bks
     else:
@@ -118,6 +120,9 @@ class Blockchain:
       return True
     else:
       return False
+
+  def updateSeq(self, seq):
+    self.db.updateSeq(seq)
 
 # # %%
 # a090e6e934, 9cf1e32b6f
