@@ -28,7 +28,7 @@ Receiver
    - broadcast tx, not mine block
 2. receive transaction
    - put into pendingTx
-   - bofore mining:
+   - before mining:
       > find all prev_out for inputs to pay for value
       > give warning if not enough unspent output 
       > clear all pending tx
@@ -43,7 +43,8 @@ Receiver
    - clear pendingTx
    - reinit unspent    
 
-
+# format
+unspent: [(addr, hash, value), ...]
 
 
 

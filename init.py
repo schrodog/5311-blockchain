@@ -35,7 +35,10 @@ class netShell(cmd.Cmd):
 
   def do_mine(self, arg):
     args = parse(arg)
-    self.net.mine({'dest_addr': arg[0], 'value':arg[1]})
+    if len(args) == 2:
+      self.net.mine({'dest_addr': args[0], 'value':args[1]})
+    else:
+      self.net.mine()
 
   # need to provide both (self, arg) as argument
   # to avoid do_welcome() takes 1 positional argument but 2 were given error
@@ -69,6 +72,9 @@ class netShell(cmd.Cmd):
   def do_bye(self, arg):
     print('close')
     raise SystemExit
+
+  def do_debug(self, arg):
+    self.net.debug()
 
 
 if __name__ == '__main__':

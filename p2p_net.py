@@ -159,8 +159,11 @@ class P2P_network:
   def mine(self, transac=''):
     if transac:
       transac['source_addr'] = self.peerID
+      transac['timestamp'] = _getTime()
       self.pendingTx.append(transac)
+      print('p2p[163]', transac)
     tx = self.blockchain.addPendingTransaction()
+    print('[164]', tx)
     if tx:
       self.blockchain.mine(tx)
     else:
@@ -192,8 +195,13 @@ class P2P_network:
     pprint({'peerID': self.peerID,       
     'server_port': self.serverPort_pool, 
     'conn_peerID': self.conn_peerID_pair,
-    'seq_pair': self.seq_peerID_pair     
+    'seq_pair': self.seq_peerID_pair
     })
-
+  
+  def debug(self):
+    pprint({
+      'unspent': self.unspent,
+      'pendingTx': self.pendingTx
+    })
 
 
