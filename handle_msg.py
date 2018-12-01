@@ -114,8 +114,6 @@ class HandleMsgThread(Thread):
     if data['peerID'] in self.conn_pair:
       self.conn_pair[data['peerID']].send(bytes(msg, 'utf-8'))        
 
-  def check_transaction(self, data):
-
 
   def run(self):
     while True:
@@ -171,6 +169,20 @@ class HandleMsgThread(Thread):
 
       elif data['type'] == 'RECEIVE_BLOCKCHAIN':
         self.receive_blockchain(data)
+
+      elif data['type'] == 'RECEIVE_TRANSACTION':
+        self.pendingTx.append(data)
+
+
+
+
+
+
+
+
+
+
+
       
       # elif data['type'] == 'REQUEST_BLOCK_HASH':
       #   if data['dest'] == self.peerID:
@@ -204,11 +216,6 @@ class HandleMsgThread(Thread):
       
       # elif data['type'] == 'RECEIVE_DATA':
       #   self.receive_data(data)
-
-      elif data['type'] == 'RECEIVE_TRANSACTION':
-        self.pendingTx.append(data)
-
-
 
       # else:
       #   num = int(data['seq_no'])

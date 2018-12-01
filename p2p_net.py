@@ -1,13 +1,12 @@
 import json
 import random
 import socket
-import time
 import logging
-import uuid
 from threading import Thread
 from blockchain import Blockchain
 from bson import ObjectId
 from pprint import pprint
+from utility import _getTime, _getPeerID
 from handle_msg import JSONEncoder, HandleMsgThread
 
 host_name = socket.gethostname()
@@ -67,34 +66,22 @@ class ConnectionThread(Thread):
 
 class P2P_network:
   def __init__(self, _id=""):
-    self.peerID = self._getPeerID(_id)    # my peer ID        
+    self.peerID = _getPeerID(_id)    # my peer ID        
     self.clientSocket_pool = []       
     self.serverSocket_pool = []      # available port to receive connection 
     self.serverPort_pool = []       
     self.thread_pool = []
     self.peer_ports = []
     self.conn_peerID_pair = {}    # existing socket-peerID pair
-    self.blockchain = Blockchain(self.peerID)
+    self.unspent = [] 
+    self.pendingTx = []
+    self.blockchain = Blockchain(self.peerID, self.unspent, self.pendingTx)
     self.seq_peerID_pair = self.blockchain.seq_pair   # existing seq numbexr-peerID pair
-    # self.unspent = self.blockchain.unspent
-    self.unspent = self._analyse_unspent()
     self._addServerSocket()
     self._addClientSocket()
-    self.pendingTx = []
 
     print(self.serverPort_pool)
-  
-  def _getPeerID(self, _id):
-    if _id != "":
-      return str(_id)
-    return uuid.uuid4().hex[:20]
 
-  def _analyse_unspent(self):
-    all_tx = [i['transaction'] for i in self.blockchain]
-    prev_outs = [(j['addr'], j['prev_out']) for j in [i['in'] \
-      for i in all_tx] if j['addr'] != 'coinbase']
-    outs = [(j['addr'], i['hash'], j['value']) for j in i['out'] for i in tx]
-    return [j for j in outs if all([i != j[:2] for i in prev_outs])]
 
   def _createServerSocket(self):
     while True:
@@ -155,43 +142,13 @@ class P2P_network:
     for key,soc in self.conn_peerID_pair.items():
       soc.sendall(bytes(msg, 'utf-8'))
 
-  def checkInOut(self, value):
-    # search for single output satisfied
-    for i in self.unspent: 
-      if self.peerID == i[0] and value <= i[2]:
-        return i
-    # search for multiple source of output
-    balance = 0
-    ins = [] 
-    for i in self.unspent:
-      if self.peerID == i[0]:
-        balance += i[2]
-        ins.append(i)
-      if balance >= value:
-        return ins
-    return False
-
-  def addPendingTransaction(self):
-    result = []
-    for tx in self.pendingTx:
-      total_out = tx['value']
-      ins = self.checkInOut(total_out)
-      if ins:
-        total_in = sum([i[2] for i in ins])
-        d = {'in': [{'addr': tx['source_addr'], 'value': i[2], 'prev_out': i[1]} for i in ins],
-          'out': [{'addr': tx['dest_addr'], 'value': total_out}]}
-        if total_in > total_out:
-          d['out'].append({'addr': tx['source_addr'], 'value': total_in-total_out})
-        result.append(d)
-    return result
-
   # assume only owner of coin can be sender of transaction
   def broadcastTransaction(self, dest_addr, value):
-    if self.checkInOut(value):
+    if self.blockchain.checkInOut(value):
       self.updateSeqNum()
       msg = json.dumps({'type': 'RECEIVE_TRANSACTION', 'source': self.peerID, 'value': value,
                         'seq_no': self.seq_peerID_pair[self.peerID], 'source_addr': self.peerID,
-                        'dest_addr': dest_addr})
+                        'dest_addr': dest_addr, 'timestamp': _getTime()})
       for key,soc in self.conn_peerID_pair.items():
         soc.sendall(bytes(msg, 'utf-8'))
     else:
@@ -199,9 +156,16 @@ class P2P_network:
 
 
 
-  def mine(self):
-    tx = self.addPendingTransaction()
-    self.blockchain.mine(tx)
+  def mine(self, transac=''):
+    if transac:
+      transac['source_addr'] = self.peerID
+      self.pendingTx.append(transac)
+    tx = self.blockchain.addPendingTransaction()
+    if tx:
+      self.blockchain.mine(tx)
+    else:
+      self.blockchain.mine()
+
     self.updateSeqNum()
     msg = JSONEncoder().encode({'type': 'RECEIVE_LATEST_BLOCK', 'source': self.peerID, 
       'block': self.blockchain.latest_block,

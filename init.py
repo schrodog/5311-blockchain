@@ -34,7 +34,8 @@ class netShell(cmd.Cmd):
     self.net.broadcast(parse(arg)[0])
 
   def do_mine(self, arg):
-    self.net.mine()
+    args = parse(arg)
+    self.net.mine({'dest_addr': arg[0], 'value':arg[1]})
 
   # need to provide both (self, arg) as argument
   # to avoid do_welcome() takes 1 positional argument but 2 were given error
@@ -45,7 +46,7 @@ class netShell(cmd.Cmd):
     pprint(self.net.blockchain.block_chain)
 
   def do_transaction(self, arg):
-    args = parse(arg)
+    args = parse(arg)   # dest_addr, value
     if len(args) == 2:
       self.net.broadcastTransaction(args[0], args[1])
     else:
