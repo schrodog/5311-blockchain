@@ -81,7 +81,6 @@ class Blockchain:
       'transaction': [{'in': [{'addr': 'coinbase'}], 
                        'out': [{'addr': self.peerID, 'value': 100}],
       'timestamp': timestamp, 'hash': '' }] }
-    # self.unspent.append((self.peerID, next_block['transaction'][0]['hash'], 100))
 
     if tx:
       next_block['transaction'] += tx
@@ -93,6 +92,7 @@ class Blockchain:
       tx2['hash'] = self._calc_hash_by_tx(tx2)
       res.append(tx2['hash'])
     next_block['merkle_root'] = _calc_merkle_root(res)
+    # add outs to unspent
     self.update_unspent(next_block)
 
     return next_block
@@ -203,7 +203,9 @@ class Blockchain:
         if 'prev_out' in i:
           for j in self.unspent:
             if (i['addr'], i['prev_out']) == j[:2]:
+              print('bc[206]', self.unspent)
               self.unspent.remove(j)
+              print('bc[208]', self.unspent)
               break
   
   def checkInOut(self, value):
@@ -212,6 +214,9 @@ class Blockchain:
     for i in self.unspent: 
       print('bc[214]', i)
       if self.peerID == i[0] and value <= i[2]:
+        print('bc[215]', self.unspent)
+        self.unspent.remove(i)
+        print('bc[217]', self.unspent)
         return [i]
     # search for multiple source of output, del used unspent
     balance = 0
@@ -226,6 +231,7 @@ class Blockchain:
         return ins
     return False
 
+  # find corresponding unspent outs to carry out transaction
   def addPendingTransaction(self):
     result = []
     while self.pendingTx:

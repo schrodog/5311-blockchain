@@ -124,7 +124,7 @@ class P2P_network:
       logging.debug("Cannot connect to port "+str(port)+':'+ str(e))
       return
 
-    t = HandleMsgThread(soc, self.peerID, self.conn_peerID_pair, self.seq_peerID_pair, self.blockchain)
+    t = HandleMsgThread(soc, self.peerID, self.conn_peerID_pair, self.seq_peerID_pair, self.blockchain, self.pendingTx)
     t.setDaemon(True)
     t.start()
 

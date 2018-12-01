@@ -68,6 +68,8 @@ class HandleMsgThread(Thread):
       if my_latest_block['current_hash'] == data['block']['prev_hash']:
         result = self.blockchain.add_block(block)
         if result:
+          self.blockchain.update_unspent(block)
+          self.blockchain.update_tx_data(block['transaction'])
           self.broadcast_latest_block(data['source'])
       elif block['index'] > my_latest_block['index']:
         msg = JSONEncoder().encode({'type': 'REQUEST_BLOCKCHAIN', 'sender': self.peerID, 

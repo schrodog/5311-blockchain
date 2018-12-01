@@ -47,6 +47,26 @@ Receiver
 unspent: [(addr, hash, value), ...]
 
 
+# Process
+
+
+# Demo
+1. start 1 node (A)
+2. mine without tx
+3. start another node (B)
+4. mine
+5. connect A -> B
+   - see data sync
+6. A mine with 1 tx (to another)
+   - see data sync
+7. B mine with 1 tx
+8. start node C
+9. connect to B
+   - see data sync
+10. C broadcast tx
+11. A mine 
+12. A bye, login again with A's peer ID
+
 
 
 
