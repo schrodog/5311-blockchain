@@ -194,8 +194,10 @@ class Blockchain:
     for tx in transaction:
       if self.pendingTx:
         for i in tx['out']:
+          # check if any 'pendingTx' already exist in 'out'
           for j in self.pendingTx:
-            if i[:2] == (j['dest_addr'], j['value']) and tx['in'][0]['addr'] == j['source_addr']:
+            print('bc[199]', i,j)
+            if (i['addr'], i['value']) == (j['dest_addr'], j['value']) and tx['in'][0]['addr'] == j['source_addr']:
               self.pendingTx.remove(j)
               break
       for i in tx['in']:
