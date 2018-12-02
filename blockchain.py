@@ -53,7 +53,7 @@ class Blockchain:
     strs = ""
     for s in ['in', 'out']:
       for i in tx[s]:
-        print('[56]', i)
+        # print('[56]', i)
         for j in i:
           strs += str(i[j])
     strs += str(tx['timestamp'])
@@ -61,7 +61,7 @@ class Blockchain:
   
   def mine(self, tx=''):
     new_block = self.create_next_block(tx)
-    print('blockchain.py[62]', new_block)
+    # print('blockchain.py[62]', new_block)
     self.add_block(new_block)
   
   def create_next_block(self, tx=''):
@@ -81,14 +81,14 @@ class Blockchain:
       'transaction': [{'in': [{'addr': 'coinbase'}], 
                        'out': [{'addr': self.peerID, 'value': 100}],
       'timestamp': timestamp, 'hash': '' }] }
-
+    # if other tx besides coinbase, then add to transaction
     if tx:
       next_block['transaction'] += tx
 
     # concat all values in in,out,timestamp, calc hash
     res = []
     for tx2 in next_block['transaction']:
-      print('[91]', tx2)
+      # print('[91]', tx2)
       tx2['hash'] = self._calc_hash_by_tx(tx2)
       res.append(tx2['hash'])
     next_block['merkle_root'] = _calc_merkle_root(res)
@@ -105,7 +105,7 @@ class Blockchain:
   def add_block(self, new_block):
     if self.check_next_block(new_block, self.latest_block):
       self.blocks.append(new_block)
-      print('blockchain.py[99]', self.blocks)
+      # print('blockchain.py[99]', self.blocks)
       self.db.insert([new_block.copy()])
       return True
     else:
@@ -115,22 +115,22 @@ class Blockchain:
     nextBlockHash = _calc_hash(nextBlock['prev_hash'] + str(nextBlock['timestamp']) + str( nextBlock['nonce']) )
     print('blockchain.py[108]', nextBlockHash)
     if (previousBlock['index'] + 1) != nextBlock['index']:
-      print('[110]')
+      # print('[110]')
       return False
     elif previousBlock['current_hash'] != nextBlock['prev_hash']:
-      print('[113]')
+      # print('[113]')
       return False
     elif nextBlockHash != nextBlock['current_hash']:
-      print('[116]')
+      # print('[116]')
       return False
     elif not self.check_difficulty(nextBlockHash):
-      print('[119]')
+      # print('[119]')
       return False
     elif not self.check_transaction(nextBlock, replaceBC):
-      print('[115] failed tx')
+      # print('[115] failed tx')
       return False
     else:
-      print('[125]')
+      # print('[125]')
       return True
 
   
@@ -203,32 +203,36 @@ class Blockchain:
         if 'prev_out' in i:
           for j in self.unspent:
             if (i['addr'], i['prev_out']) == j[:2]:
-              print('bc[206]', self.unspent)
+              # print('bc[206]', self.unspent)
               self.unspent.remove(j)
-              print('bc[208]', self.unspent)
+              # print('bc[208]', self.unspent)
               break
   
-  def checkInOut(self, value):
+  def checkInOut(self, value, source_addr, dest_addr, query=False):
     # search for single output satisfied
     value = int(value)
     for i in self.unspent: 
-      print('bc[214]', i)
-      if self.peerID == i[0] and value <= i[2]:
-        print('bc[215]', self.unspent)
-        self.unspent.remove(i)
-        print('bc[217]', self.unspent)
+      # print('bc[214]', i)
+      if source_addr == i[0] and value <= i[2]:
+        # print('bc[215]', self.unspent)
+        if not query:
+          self.unspent.remove(i)
+        # print('bc[217]', self.unspent)
         return [i]
     # search for multiple source of output, del used unspent
     balance = 0
     ins = []
     for i in self.unspent:
-      print('bc[223]', i)
-      if self.peerID == i[0]:
+      # print('bc[223]', i)
+      if source_addr == i[0]:
         balance += int(i[2])
         ins.append(i)
-        self.unspent.remove(i)
       if balance >= value:
+        if not query:
+          for j in ins:
+            self.unspent.remove(j)
         return ins
+    print('Transaction from '+source_addr+' to '+dest_addr+' for '+str(value)+' is invalid.')
     return False
 
   # find corresponding unspent outs to carry out transaction
@@ -237,8 +241,8 @@ class Blockchain:
     while self.pendingTx:
       tx = self.pendingTx.pop(0)
       total_out = int(tx['value'])
-      ins = self.checkInOut(total_out)
-      print('[234]', ins)
+      ins = self.checkInOut(total_out, tx['source_addr'], tx['dest_addr'])
+      # print('[234]', ins)
       if ins:
         total_in = sum([i[2] for i in ins])
         d = {'in': [{'addr': tx['source_addr'], 'value': i[2], 'prev_out': i[1]} for i in ins],
@@ -247,72 +251,6 @@ class Blockchain:
           d['out'].append({'addr': tx['source_addr'], 'value': total_in-total_out})
         result.append(d)
     return result
-
-
-
-# # %%
-# a090e6e934, 9cf1e32b6f
-# bc1 = Blockchain('fd')
-# bc2 = Blockchain('ds')
-
-# for i in range(2):
-#   bc1.mine()
-
-# for i in range(3):
-#   bc2.mine()
-
-# # %%
-# [i.block for i in bc1.blocks]
-
-# # %%
-# bc1.latest_block.block
-
-# # %%
-# [i.block for i in bc2.blocks]
-
-
-# # %%
-# bc2.replaceChain(bc1.blocks)
-
-
-
-
-# class Block:
-#   def __init__(self, b):
-#     self.timestamp = b['timestamp']
-#     self.prev_hash = b['prev_hash']
-#     self.current_hash = b['current_hash']
-#     self.nonce = b['nonce']
-#     self.transaction = b['transaction']
-#     self.merkle_root = b['merkle_root']
-#     self.index = b['index']
-
-#   def __eq__(self, other):
-#     return self.block == other.block  
-  
-#   @staticmethod
-#   def genesis(self):
-#     return Block({
-#       'timestamp': 15080396630448296,
-#       'prev_hash': '0',
-#       'current_hash': '00000000315c77a1f9c98fb6247d03dd18ac52632d7dc6a9920261d8109b37cf',
-#       'nonce': 0,
-#       'transaction': [],
-#       'merkle_root': '0',
-#       'index': 0
-#     })
-  
-#   @property
-#   def block(self):
-#     return {
-#       'timestamp': self.timestamp,
-#       'prev_hash': self.prev_hash,
-#       'current_hash': self.current_hash,
-#       'nonce': self.nonce,
-#       'transaction': self.transaction,
-#       'merkle_root': self.merkle_root,
-#       'index': self.index
-#     }
 
 
 

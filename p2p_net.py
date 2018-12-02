@@ -144,9 +144,9 @@ class P2P_network:
 
   # assume only owner of coin can be sender of transaction
   def broadcastTransaction(self, dest_addr, value):
-    if self.blockchain.checkInOut(value):
+    if self.blockchain.checkInOut(value, self.peerID, dest_addr, True):
       self.updateSeqNum()
-      msg = json.dumps({'type': 'RECEIVE_TRANSACTION', 'source': self.peerID, 'value': value,
+      msg = json.dumps({'type': 'RECEIVE_TRANSACTION', 'source': self.peerID, 'value': int(value),
                         'seq_no': self.seq_peerID_pair[self.peerID], 'source_addr': self.peerID,
                         'dest_addr': dest_addr, 'timestamp': _getTime()})
       for key,soc in self.conn_peerID_pair.items():
@@ -163,7 +163,7 @@ class P2P_network:
       self.pendingTx.append(transac)
       print('p2p[163]', transac)
     tx = self.blockchain.addPendingTransaction()
-    print('[164]', tx)
+    # print('[164]', tx)
     if tx:
       self.blockchain.mine(tx)
     else:

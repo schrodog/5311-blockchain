@@ -26,26 +26,33 @@ Receiver
 1. sender want to init transaction
    - not broadcast tx, mine block and put insde
    - broadcast tx, not mine block
+      > p2p_net/broadcastTransaction
 2. receive transaction
-   - put into pendingTx
-   - before mining:
-      > find all prev_out for inputs to pay for value
-      > give warning if not enough unspent output 
-      > clear all pending tx
-      > update unspent
-      > calc hashes for transactions and calc merkle root
-3. add last block
+   - put into pendingTx [handle_msg]
+3. mining:
+> find all prev_out for inputs to pay for value
+> give warning if not enough unspent output 
+> clear all pending tx
+> update unspent
+> calc hashes for transactions and calc merkle root
+
+p2p_net/mine -> blockchain/addPendingTransaction <-> checkInOut
+blockchain/mine -> create_new_blcok -> update_unspent
+-> blockchain/add_block
+
+4. add last block
    - check merkle root
    - update unspent
    - clear confirmed pendingTx
-4. replace blockchain
+5. replace blockchain
    - check all merkle root
    - clear pendingTx
    - reinit unspent    
 
 # format
 unspent: [(addr, hash, value), ...]
-
+pendingTx: [{dest_addr, seq_no, source, 
+            source_addr, timestamp, value, type='RECEIVE_TRANSACTION}, ...]
 
 # Process
 
