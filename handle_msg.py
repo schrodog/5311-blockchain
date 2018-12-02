@@ -127,10 +127,10 @@ class HandleMsgThread(Thread):
         self.conn_pair.pop(self.paired_peerID)
         return
       
-      # print('receive data:', raw_data)
+      print('receive data:', raw_data)
       data = json.loads(raw_data.decode())
-      print('receive data:')
-      print(json.dumps(data, indent=2))
+      # print('receive data:')
+      # print(json.dumps(data, indent=2))
 
       # receive connection
       if data['type'] == 'REQUEST_PEERID':
@@ -138,12 +138,14 @@ class HandleMsgThread(Thread):
         self.conn.send(bytes(msg, 'utf-8'))
         self.conn_pair[data['peerID']] = self.conn
         self.paired_peerID = data['peerID']
+        time.sleep(0.2)
         self.request_latest_block(data)
 
       # init connection
       elif data['type'] == 'RECEIVE_PEERID':
         self.conn_pair[data['peerID']] = self.conn
         self.paired_peerID = data['peerID']
+        time.sleep(0.2)
         self.request_latest_block(data)
 
 
