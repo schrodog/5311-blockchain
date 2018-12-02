@@ -30,11 +30,11 @@ Receiver
 2. receive transaction
    - put into pendingTx [handle_msg]
 3. mining:
-> find all prev_out for inputs to pay for value
-> give warning if not enough unspent output 
-> clear all pending tx
-> update unspent
-> calc hashes for transactions and calc merkle root
+- find all prev_out for inputs to pay for value
+- give warning if not enough unspent output 
+- clear all pending tx
+- update unspent
+- calc hashes for transactions and calc merkle root
 
 p2p_net/mine -> blockchain/addPendingTransaction <-> checkInOut
 blockchain/mine -> create_new_blcok -> update_unspent
@@ -48,6 +48,8 @@ blockchain/mine -> create_new_blcok -> update_unspent
    - check all merkle root
    - clear pendingTx
    - reinit unspent    
+handle_msg/receive_blockchain -> blockchain/replaceChain -> check_chain
+-> check_next_block -> check_transaction <-> update_tx_data
 
 # format
 unspent: [(addr, hash, value), ...]
@@ -68,7 +70,14 @@ blockchain:
 
 
 
-# Process
+# Dependency library
+## Python3
+bjson
+pymongo
+
+## Others
+MongoDB
+
 
 
 # Demo

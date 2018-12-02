@@ -159,11 +159,6 @@ class Blockchain:
       return False
     if not replaceBC:
       self.update_tx_data(transaction)
-    else:
-      self.pendingTx.clear()
-      res = self._analyse_unspent()
-      self.unspent.clear()
-      self.unspent += res
 
     return True
 
@@ -181,7 +176,11 @@ class Blockchain:
   def replaceChain(self, newChain):
     if self.check_chain(newChain, True) and (len(newChain) > len(self.blocks)):
       self.blocks = newChain
-      # print('[113]',newChain)
+      # update transaction in bulk
+      self.pendingTx.clear()
+      res = self._analyse_unspent()
+      self.unspent.clear()
+      self.unspent += res
       self.db.overwrite(newChain.copy())
       return True
     else:

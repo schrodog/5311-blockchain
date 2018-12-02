@@ -4,7 +4,7 @@ import socket
 import logging
 from threading import Thread
 from blockchain import Blockchain
-from bson import ObjectId
+# from bson import ObjectId
 from pprint import pprint
 from utility import _getTime, _getPeerID
 from handle_msg import JSONEncoder, HandleMsgThread
@@ -187,10 +187,12 @@ class P2P_network:
     bc = self.blockchain.block_chain
     for i in bc:
       if i['current_hash'] == h:
+        print('Block:')
         pprint(i)
         return
       for j in i['transaction']:
         if j['hash'] == h:
+          print('Transaction:')
           pprint(j)
           return
     print('No matching hash found')

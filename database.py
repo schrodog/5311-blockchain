@@ -44,19 +44,4 @@ class Database:
   def close(self):
     self.main.terminate()
 
-# a = Database('abc')
-# a.overwrite([{'a': 1, 'b': 2}])
-# print(a.load())
-# # a.close()
-
-# b = Database('def')
-# b.overwrite([{'f':3}])
-# b.insert([{'c': 1, 'd': 2}])
-# print(b.load())
-
-# d5b7dd9194       7066edfd21
-
-
-
-
 
