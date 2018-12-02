@@ -136,17 +136,13 @@ class Blockchain:
   
   def _analyse_unspent(self):
     all_tx = [i['transaction'] for i in self.block_chain]
-    # print('bc[133]', all_tx)
-    res = []
+    prev_outs, outs = [], []
     for t in all_tx:
-      # print('bc[136]', t)
       for i in t:
-        prev_outs = [(j['addr'], j['prev_out']) for j in i['in'] if j['addr'] != 'coinbase']
-        outs = [(j['addr'], i['hash'], j['value']) for j in i['out']]
-        res += [j for j in outs if all([i != j[:2] for i in prev_outs])]
-        # print('bc[141]', prev_outs, outs, res)
-    # print('bc[142]', res)
-    return res
+        prev_outs += [(j['addr'], j['prev_out']) for j in i['in'] if j['addr'] != 'coinbase']
+        outs += [(j['addr'], i['hash'], j['value']) for j in i['out']]
+    return [j for j in outs if all([i != j[:2] for i in prev_outs])]
+
 
   def check_transaction(self, nextBlock, replaceBC):
     # check individual tx

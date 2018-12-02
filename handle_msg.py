@@ -179,25 +179,6 @@ class HandleMsgThread(Thread):
           for _id, soc in self.conn_pair.items():
             soc.send(raw_data)
 
-
-
-
-
-#  [
-#    {'in': [{'addr': 'coinbase'}], 
-#   'out': [{'addr': '1f00495086d34283b46b', 'value': 100}], 
-#   'timestamp': 15437402323041766, 
-#   'hash': '669da07224145031ac34fee52c896551b40851864a9ee464561a99b1f4abbcb3'}, 
-#   {'in': [{'addr': 'fd72546a3ed74d2fb203', 'value': 100, 
-#   'prev_out': '9a6e91b373f007a3e0823f7e30e015badad3be7a83170ac3b5e0110bcf8f4bbe'}], 
-#   'out': [{'addr': 'fds', 'value': 67}, {'addr': 'fd72546a3ed74d2fb203', 'value': 33}], 'timestamp': 15437401440026135, 
-#   'hash': '227347af544d06d84e6171bbdf87dd58511a6cedc1eb5eabcba544eff2eda9ad'}
-  
-#   ]
-
-
-
-
       
       # elif data['type'] == 'REQUEST_BLOCK_HASH':
       #   if data['dest'] == self.peerID:
