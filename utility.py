@@ -17,7 +17,7 @@ def _calc_hash(a):
 
 def _calc_merkle_root(tx):
   def itera(ls):
-    print(ls)
+    # print(ls)
     if len(ls) <= 1:
       return ls
     res = []

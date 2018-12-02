@@ -39,22 +39,22 @@ class ConnectionThread(Thread):
   
       conn, addr = self.server_socket.accept()
       # after accept connection
-      print('new conn', conn, addr)
+      # print('new conn', conn, addr)
       self.serverPort_pool.remove(self.serverPort)
 
       # args must be in format (xxx,) to make it iterable
       self.th = HandleMsgThread(conn, self.peerID, self.conn_pair, self.seq_pair, self.blockchain, self.pendingTx)
       self.th.setDaemon(True)
-      print("connection from", addr, self.th)
+      print("connection from", addr)
 
       while True:
         try:
           self.th.start()
         except Exception as e:
-          print('terminate', str(self.th), 'by', str(e))
+          # print('terminate', str(self.th), 'by', str(e))
           pass
         finally:
-          print('terminate', str(self.th))
+          # print('terminate', str(self.th))
           self.th.join()
           break
 
@@ -94,7 +94,7 @@ class P2P_network:
         t.setDaemon(True)
         t.start()
         return (server_socket, port, t)
-      except OSError as e:
+      except Exception as e:
         logging.debug("OSError {} {}".format(e, self.port))
   
   def _addServerSocket(self):
@@ -161,7 +161,7 @@ class P2P_network:
       transac['source_addr'] = self.peerID
       transac['timestamp'] = _getTime()
       self.pendingTx.append(transac)
-      print('p2p[163]', transac)
+      # print('p2p[163]', transac)
     tx = self.blockchain.addPendingTransaction()
     # print('[164]', tx)
     if tx:

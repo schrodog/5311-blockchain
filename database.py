@@ -1,5 +1,6 @@
 import subprocess
 from pymongo import MongoClient
+import os
 
 class Database:
   def __init__(self, peerID):
@@ -9,7 +10,9 @@ class Database:
     self._initDB(peerID)
 
   def _start(self):
-    print('start database')
+    # print('start database')
+    if not os.path.exists("db"):
+      os.makedirs("db")
     self.main = subprocess.Popen(["mongod", "--dbpath", "./db/", "--port", str(self.port)], stdout=subprocess.PIPE)
     # print(a.stdout.decode())
 
@@ -25,12 +28,13 @@ class Database:
       self.unspent.insert_one({})
 
   def insert(self, data):
-    self.blockchain.insert_many(data)
+    b = data.copy()
+    self.blockchain.insert_many(b)
   
   def overwrite(self, data):
     # request = [DeleteMany(filter={}), InsertMany(data)]
     self.blockchain.delete_many(filter={})
-    self.blockchain.insert_many(data)
+    self.blockchain.insert_many(data.copy())
 
   def updateSeq(self, seq):
     self.seq.replace_one({}, seq)

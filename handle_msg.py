@@ -83,34 +83,6 @@ class HandleMsgThread(Thread):
     if result:
       self.broadcast_latest_block(data['source'])
 
-  def receive_block_hashes(self, data):
-     
-    seq_num = int(data['seq_no'])
-    if not (data['source'] in self.seq_pair):
-      self.seq_pair[data['source']] = 0
-      self.updateSeq(False)
-
-    # if not receive block hash from this peer before
-    if seq_num > self.seq_pair[data['source']]:
-      self.seq_pair[data['source']] = seq_num
-      self.updateSeq(False)
-      if data['dest'] == self.peerID:
-        print(data['block_hashes'])
-
-  def receive_data(self, data):
-     
-    seq_num = int(data['seq_no'])
-    if not (data['source'] in self.seq_pair):
-      self.seq_pair[data['source']] = 0
-      self.updateSeq(False)
-
-    # if not receive block hash from this peer before
-    if seq_num > self.seq_pair[data['source']]:
-      self.seq_pair[data['source']] = seq_num
-      self.updateSeq(False)
-      if data['dest'] == self.peerID:
-        pprint(data['data_detail'])
-
   def request_latest_block(self, data):
     msg = json.dumps({'type': 'REQUEST_LATEST_BLOCK', 'source': self.peerID })
     if data['peerID'] in self.conn_pair:
@@ -127,7 +99,7 @@ class HandleMsgThread(Thread):
         self.conn_pair.pop(self.paired_peerID)
         return
       
-      print('receive data:', raw_data)
+      # print('receive data:', raw_data)
       data = json.loads(raw_data.decode())
       # print('receive data:')
       # print(json.dumps(data, indent=2))
@@ -138,14 +110,14 @@ class HandleMsgThread(Thread):
         self.conn.send(bytes(msg, 'utf-8'))
         self.conn_pair[data['peerID']] = self.conn
         self.paired_peerID = data['peerID']
-        time.sleep(0.2)
+        time.sleep(0.1)
         self.request_latest_block(data)
 
       # init connection
       elif data['type'] == 'RECEIVE_PEERID':
         self.conn_pair[data['peerID']] = self.conn
         self.paired_peerID = data['peerID']
-        time.sleep(0.2)
+        time.sleep(0.1)
         self.request_latest_block(data)
 
 
@@ -168,61 +140,46 @@ class HandleMsgThread(Thread):
         else:
           msg = JSONEncoder().encode({'type': 'RECEIVE_BLOCKCHAIN', 'source': data['source'],
             'sender': self.peerID, 'blockchain': self.blockchain.block_chain })
-          print('[152]',msg)
+          # print('[152]',msg)
           self.conn_pair[data['sender']].send(bytes(msg, 'utf-8'))
 
       elif data['type'] == 'RECEIVE_BLOCKCHAIN':
         self.receive_blockchain(data)
 
       elif data['type'] == 'RECEIVE_TRANSACTION':
+        if not data['source'] in self.seq_pair:
+          self.seq_pair[data['source']] = 0
         if data['seq_no'] > self.seq_pair[data['source']]:
           self.seq_pair[data['source']] = data['seq_no']
           self.pendingTx.append(data)
+          print('Transaction added to pending list')
           for _id, soc in self.conn_pair.items():
             soc.send(raw_data)
 
       
-      # elif data['type'] == 'REQUEST_BLOCK_HASH':
-      #   if data['dest'] == self.peerID:
-      #     self.updateSeq()
-      #     msg = JSONEncoder().encode({'type': 'RECEIVE_BLOCK_HASH', 'source': self.peerID,
-      #       'sender': self.peerID, 'block_hashes': self.blockchain.block_hashes,
-      #       'dest': data['source'], 'seq_no': self.seq_pair[self.peerID] })
-      #     self.conn_pair[data['sender']].send(bytes(msg, 'utf-8'))
-        
-      # elif data['type'] ==  'RECEIVE_BLOCK_HASH':
-      #   self.receive_block_hashes(data)
+     
+  # def receive_block_hashes(self, data):
+  #   seq_num = int(data['seq_no'])
+  #   if not (data['source'] in self.seq_pair):
+  #     self.seq_pair[data['source']] = 0
+  #     self.updateSeq(False)
 
-      # elif data['type'] == 'REQUEST_DATA':
-      #   if data['dest'] == self.peerID:
-      #     # self.blockchain.updateSeq()
-      #     if data['data_type'] == 'block':
-      #       block = (next(item for item in self.blockchain.block_chain if item["current_hash"] == data['hash']))
-      #       if block is not None:
-      #         msg = JSONEncoder().encode({'type': 'RECEIVE_DATA', 'source': self.peerID,
-      #           'sender': self.peerID, 'data_detail': block,
-      #           'dest': data['source'], 'seq_no': self.seq_pair[self.peerID],
-      #           'data_type': data['data_type'] })
-      #         self.conn_pair[data['sender']].send(bytes(msg, 'utf-8'))
-      #       else:
-      #         pass
-      #     elif data['data_type'] == 'tx':
-      #       #TODO get transaction by hash
-      #       pass
-      #     else:
-      #       pass
-      
-      # elif data['type'] == 'RECEIVE_DATA':
-      #   self.receive_data(data)
+  #   # if not receive block hash from this peer before
+  #   if seq_num > self.seq_pair[data['source']]:
+  #     self.seq_pair[data['source']] = seq_num
+  #     self.updateSeq(False)
+  #     if data['dest'] == self.peerID:
+  #       print(data['block_hashes'])
 
-      # else:
-      #   num = int(data['seq_no'])
-      #   if not (data['source'] in self.seq_pair):
-      #     self.seq_pair[data['source']] = 0
+  # def receive_data(self, data):
+  #   seq_num = int(data['seq_no'])
+  #   if not (data['source'] in self.seq_pair):
+  #     self.seq_pair[data['source']] = 0
+  #     self.updateSeq(False)
 
-      #   # controlled flooding
-      #   if num > self.seq_pair[data['source']]:
-      #     print('broadcast to peers')
-      #     self.seq_pair[data['source']] = num
-      #     for _id, soc in self.conn_pair.items():
-      #       soc.sendall(raw_data)
+  #   # if not receive block hash from this peer before
+  #   if seq_num > self.seq_pair[data['source']]:
+  #     self.seq_pair[data['source']] = seq_num
+  #     self.updateSeq(False)
+  #     if data['dest'] == self.peerID:
+  #       pprint(data['data_detail'])

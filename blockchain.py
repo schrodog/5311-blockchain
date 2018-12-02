@@ -63,6 +63,7 @@ class Blockchain:
     new_block = self.create_next_block(tx)
     # print('blockchain.py[62]', new_block)
     self.add_block(new_block)
+    print('New block is mined')
   
   def create_next_block(self, tx=''):
     next_index = self.latest_block['index'] + 1
@@ -106,14 +107,15 @@ class Blockchain:
     if self.check_next_block(new_block, self.latest_block):
       self.blocks.append(new_block)
       # print('blockchain.py[99]', self.blocks)
-      self.db.insert([new_block.copy()])
+      self.db.insert([new_block])
+      print('New block is added')
       return True
     else:
       return False
   
   def check_next_block(self, nextBlock, previousBlock, replaceBC=False):
     nextBlockHash = _calc_hash(nextBlock['prev_hash'] + str(nextBlock['timestamp']) + str( nextBlock['nonce']) )
-    print('blockchain.py[108]', nextBlockHash)
+    # print('blockchain.py[108]', nextBlockHash)
     if (previousBlock['index'] + 1) != nextBlock['index']:
       # print('[110]')
       return False
@@ -150,7 +152,7 @@ class Blockchain:
     if not all([self._calc_hash_by_tx(tx) == tx['hash'] for tx in transaction]):
       return False
     # check merkle root
-    print('[146]', transaction)
+    # print('[146]', transaction)
     if _calc_merkle_root([i['hash'] for i in transaction]) != nextBlock['merkle_root']:
       return False
     if not replaceBC:
@@ -159,6 +161,8 @@ class Blockchain:
     return True
 
   def check_chain(self, chain, replaceBC=False):
+    if '_id' in chain[0]:
+      del chain[0]['_id'] 
     if not chain:
       # print('104')
       return False
@@ -171,13 +175,16 @@ class Blockchain:
 
   def replaceChain(self, newChain):
     if self.check_chain(newChain, True) and (len(newChain) > len(self.blocks)):
+      # print('bc[174]', self.blocks)
       self.blocks = newChain
+      # print('bc[176]', self.blocks)
       # update transaction in bulk
       self.pendingTx.clear()
       res = self._analyse_unspent()
       self.unspent.clear()
       self.unspent += res
-      self.db.overwrite(newChain.copy())
+      self.db.overwrite(newChain)
+      print('Whole blockchain is replaced')
       return True
     else:
       return False    
@@ -192,7 +199,7 @@ class Blockchain:
         for i in tx['out']:
           # check if any 'pendingTx' already exist in 'out'
           for j in self.pendingTx:
-            print('bc[199]', i,j)
+            # print('bc[199]', i,j)
             if (i['addr'], i['value']) == (j['dest_addr'], j['value']) and tx['in'][0]['addr'] == j['source_addr']:
               self.pendingTx.remove(j)
               break
