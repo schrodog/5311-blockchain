@@ -54,6 +54,20 @@ unspent: [(addr, hash, value), ...]
 pendingTx: [{dest_addr, seq_no, source, 
             source_addr, timestamp, value, type='RECEIVE_TRANSACTION}, ...]
 
+blockchain: 
+[{'current_hash': '00008f991666bb70a0286a49b48d7aa6a3a5cbc521b7bbac72b1b6881bad5b77',
+  'index': 0,
+  'merkle_root': 'b1d7c89f0fcecd0d8403a49ad0921918417228e0bb1ddb6c7b89350137624275',
+  'nonce': 28435,
+  'prev_hash': '0',
+  'timestamp': 15432153057109854,
+  'transaction': [{'hash': 'b1d7c89f0fcecd0d8403a49ad0921918417228e0bb1ddb6c7b89350137624275',
+                   'in': [{'addr': 'coinbase'}],
+                   'out': [{'addr': '7066edfd21d5b7dd9194', 'value': 100}],
+                   'timestamp': 15432153057109854}]}, ...]
+
+
+
 # Process
 
 

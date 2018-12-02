@@ -20,9 +20,6 @@ class netShell(cmd.Cmd):
   def __init__(self):
     cmd.Cmd.__init__(self)
     self.__start()
-    # self.net = None
-    # self.main = Process(target=self.__start, args=(self.net,))
-    # self.main.start()
 
   def __start(self):
     self.net = P2P_network(args.user)
@@ -30,8 +27,12 @@ class netShell(cmd.Cmd):
   def do_connect(self, arg):
     self.net.connects(parse(arg)[0])
 
-  def do_broadcast(self, arg):
-    self.net.broadcast(parse(arg)[0])
+  def help_connect(self):
+    print('Description:\n\tConnect to TCP socket of another node by stating port number')
+    print('Synopsis:\n\tconnect [port no]')
+
+  # def do_broadcast(self, arg):
+  #   self.net.broadcast(parse(arg)[0])
 
   def do_mine(self, arg):
     args = parse(arg)
@@ -40,13 +41,27 @@ class netShell(cmd.Cmd):
     else:
       self.net.mine()
 
+  def help_mine(self):
+    print('Description:\n\tMine block once, can add transaction to block')
+    print('Synopsis:\n\tmine (destination id) (value)')
+
   # need to provide both (self, arg) as argument
   # to avoid do_welcome() takes 1 positional argument but 2 were given error
   def do_info(self, arg):
     self.net.info()
+  
+  def help_info(self):
+    print('Description:\n\tPrint information related to peer')
+    print('Synopsis:\n\tinfo')
+
 
   def do_selfblock(self, arg):
     pprint(self.net.blockchain.block_chain)
+
+  def help_selfblock(self):
+    print('Description:\n\tPrint own blockchain of peer')
+    print('Synopsis:\n\tselfblock')
+
 
   def do_transaction(self, arg):
     args = parse(arg)   # dest_addr, value
@@ -55,12 +70,21 @@ class netShell(cmd.Cmd):
     else:
       print('Please input destination id, value')
 
+  def help_transaction(self):
+    print('Description:\n\tBroadcast transaction to peers, but not mining block itself, sender default to be the one initiate transaction')
+    print('Synopsis:\n\ttransaction [destination id] [value]')
+
+
   # def do_selfblockhashes(self, arg):
   #   pprint(self.net.blockchain.block_hashes)
 
-  # def do_getblock(self, arg):
-  #   if len(arg) == 1:
-  #     self.net.getBlockHashFromDest(parse(arg)[0])
+  def do_search(self, arg):
+    self.net.getDataByHash(parse(arg)[0])
+
+  def help_search(self):
+    print('Description:\n\tSearch data of block according to hash, can be of block hash / transaction hash')
+    print('Synopsis:\n\tsearch [hash]')
+
 
   # def do_getdata(self, arg):
   #   if len(arg) == 3:
@@ -73,8 +97,18 @@ class netShell(cmd.Cmd):
     print('close')
     raise SystemExit
 
+  def help_bye(self):
+    print('Description:\n\tExit blockchain program')
+    print('Synopsis:\n\tbye')
+
+
   def do_debug(self, arg):
     self.net.debug()
+  
+  def help_debug(self):
+    print('Description:\n\tShow data for program debug')
+    print('Synopsis:\n\tdebug')
+
 
 
 if __name__ == '__main__':

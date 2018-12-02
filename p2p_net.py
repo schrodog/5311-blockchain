@@ -183,19 +183,24 @@ class P2P_network:
   #   for _id, soc in self.conn_peerID_pair.items():
   #     soc.send(bytes(msg, 'utf-8'))
 
-  # def getDataByHash(self, data_type, curr_hash):
-  #   self.updateSeqNum()
-  #   msg = JSONEncoder().encode({'type': 'REQUEST_DATA', 'source': self.peerID, 
-  #     'seq_no': self.seq_peerID_pair[self.peerID], 'sender': self.peerID, 'dest': dest_peer_id,
-  #     'data_type': data_type, 'hash': curr_hash})
-  #   for _id, soc in self.conn_peerID_pair.items():
-  #     soc.send(bytes(msg, 'utf-8'))
+  def getDataByHash(self, h):
+    bc = self.blockchain.block_chain
+    for i in bc:
+      if i['current_hash'] == h:
+        pprint(i)
+        return
+      for j in i['transaction']:
+        if j['hash'] == h:
+          pprint(j)
+          return
+    print('No matching hash found')
 
   def info(self):
     pprint({'peerID': self.peerID,       
     'server_port': self.serverPort_pool, 
     'conn_peerID': self.conn_peerID_pair,
-    'seq_pair': self.seq_peerID_pair
+    'seq_pair': self.seq_peerID_pair,
+    'balance': sum([i[2] for i in self.unspent if i[0] == self.peerID])
     })
   
   def debug(self):

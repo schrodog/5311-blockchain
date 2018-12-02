@@ -113,7 +113,8 @@ for i in range(2):
       break
 
 # %%
-a=[[1,2],[3,4]]
+a = [('a',1),('a',3),('b',7),('a',12)]
 
+sum([i[1] for i in a if i[0] == 'a'])
 
 
