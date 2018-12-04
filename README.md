@@ -78,26 +78,6 @@ pymongo
 ## Others
 MongoDB
 
-# Demo
-1. start 1 node (A)
-2. selfblock, info
-3. mine without tx
-4. start another node (B)
-5. mine
-6. connect A -> B
-   - see data sync
-7. A mine with 1 tx (to another)
-   - see data sync
-8. B mine with 1 tx
-9. start node C
-10. connect to B
-   - see data sync
-11. A mine tx (A -> C 70)
-12. C tx (C -> B 400): show error
-13. C tx (C -> B 50)
-14. A mine 
-15. A bye, login again with A's peer ID
-16. show info, selfblock
-17. connect to B
-18. mine
+
+
 

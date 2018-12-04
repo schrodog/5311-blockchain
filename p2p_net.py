@@ -201,14 +201,14 @@ class P2P_network:
     pprint({'peerID': self.peerID,       
     'server_port': self.serverPort_pool, 
     'conn_peerID': self.conn_peerID_pair,
-    'seq_pair': self.seq_peerID_pair,
     'balance': sum([i[2] for i in self.unspent if i[0] == self.peerID])
     })
   
   def debug(self):
     pprint({
       'unspent': self.unspent,
-      'pendingTx': self.pendingTx
+      'pendingTx': self.pendingTx,
+      'seq_pair': self.seq_peerID_pair
     })
 
 
