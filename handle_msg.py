@@ -157,29 +157,3 @@ class HandleMsgThread(Thread):
             soc.send(raw_data)
 
       
-     
-  # def receive_block_hashes(self, data):
-  #   seq_num = int(data['seq_no'])
-  #   if not (data['source'] in self.seq_pair):
-  #     self.seq_pair[data['source']] = 0
-  #     self.updateSeq(False)
-
-  #   # if not receive block hash from this peer before
-  #   if seq_num > self.seq_pair[data['source']]:
-  #     self.seq_pair[data['source']] = seq_num
-  #     self.updateSeq(False)
-  #     if data['dest'] == self.peerID:
-  #       print(data['block_hashes'])
-
-  # def receive_data(self, data):
-  #   seq_num = int(data['seq_no'])
-  #   if not (data['source'] in self.seq_pair):
-  #     self.seq_pair[data['source']] = 0
-  #     self.updateSeq(False)
-
-  #   # if not receive block hash from this peer before
-  #   if seq_num > self.seq_pair[data['source']]:
-  #     self.seq_pair[data['source']] = seq_num
-  #     self.updateSeq(False)
-  #     if data['dest'] == self.peerID:
-  #       pprint(data['data_detail'])

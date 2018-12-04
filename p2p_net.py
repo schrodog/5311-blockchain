@@ -176,13 +176,6 @@ class P2P_network:
     for _id, soc in self.conn_peerID_pair.items():
       soc.send(bytes(msg, 'utf-8'))
 
-  # def getBlockHashFromDest(self, dest_peer_id):
-  #   self.updateSeqNum()
-  #   msg = JSONEncoder().encode({'type': 'REQUEST_BLOCK_HASH', 'source': self.peerID, 
-  #     'seq_no': self.seq_peerID_pair[self.peerID], 'sender': self.peerID, 'dest': dest_peer_id})
-  #   for _id, soc in self.conn_peerID_pair.items():
-  #     soc.send(bytes(msg, 'utf-8'))
-
   def getDataByHash(self, h):
     bc = self.blockchain.block_chain
     for i in bc:

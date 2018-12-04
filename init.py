@@ -74,24 +74,12 @@ class netShell(cmd.Cmd):
     print('Description:\n\tBroadcast transaction to peers, but not mining block itself, sender default to be the one initiate transaction')
     print('Synopsis:\n\ttransaction [destination id] [value]')
 
-
-  # def do_selfblockhashes(self, arg):
-  #   pprint(self.net.blockchain.block_hashes)
-
   def do_search(self, arg):
     self.net.getDataByHash(parse(arg)[0])
 
   def help_search(self):
     print('Description:\n\tSearch data of block according to hash, can be of block hash / transaction hash')
     print('Synopsis:\n\tsearch [hash]')
-
-
-  # def do_getdata(self, arg):
-  #   if len(arg) == 3:
-  #     dest_peer_id, data_type, curr_hash = parse(arg)
-  #     self.net.getDataByHash(dest_peer_id, data_type, curr_hash)
-  #   else:
-  #     print('please input [peer id, data type(block/tx), hash value]')
 
   def do_bye(self, arg):
     print('close')
